@@ -4,12 +4,12 @@
     <header class="navbar">
       <div class="nav-brand">
         <span class="logo-dot"></span>
-        <span class="logo-text">NEXUS</span>
+        <span class="logo-text">ZHENDOKU</span>
       </div>
       <nav class="nav-links">
-        <a href="#features" class="nav-link">特點</a>
-        <a href="#about" class="nav-link">關於我們</a>
-        <a href="#contact" class="nav-link">聯絡我們</a>
+        <span class="nav-link" @click="scrollToSection('projects')">項目</span>
+        <router-link to="/album" class="nav-link">相簿</router-link>
+        <span class="nav-link" @click="scrollToSection('contact')">聯絡我</span>
       </nav>
       <div class="nav-action">
         <button class="btn btn-outline">登入</button>
@@ -18,32 +18,16 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
+      <div class="hero-image-container">
+        <img :src="heroImg" alt="Hero Background" class="hero-image" />
+      </div>
       <div class="hero-bg-overlay"></div>
       
       <div class="hero-content">
-        <div class="badge">
-          <span class="badge-dot"></span>
-          <span>探索未來的全新體驗</span>
-        </div>
-        
         <h1 class="hero-title">
-          用極致設計與科技<br>
-          <span class="gradient-text">重塑您的數位視界</span>
+          <span class="white-title">您好我是</span><br>
+          <span class="retro-title">ZHENDOKU</span>
         </h1>
-        
-        <p class="hero-subtitle">
-          我們結合美學與頂尖技術，為您打造極具現代感、流暢且具高互動性的網頁體驗。在這裡，您的每個創意都將轉化為無限可能。
-        </p>
-        
-        <div class="hero-cta">
-          <button class="btn btn-primary" @click="exploreMore">
-            探索更多
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </button>
-          <button class="btn btn-secondary">
-            聯絡我們
-          </button>
-        </div>
       </div>
 
       <!-- Scroll Indicator -->
@@ -55,52 +39,88 @@
       </div>
     </section>
 
-    <!-- Additional section to show layout capability -->
-    <section id="features" class="features-section">
+    <!-- Projects Intro -->
+    <section id="projects" class="project-page">
       <div class="section-header">
-        <h2 class="section-title">我們的核心優勢</h2>
-        <p class="section-desc">透過三大核心支柱，我們為您開拓更廣闊的商業前景</p>
-      </div>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-          </div>
-          <h3>響應式設計 (RWD)</h3>
-          <p>完美適應所有裝置，無論是手機、平板還是桌面，都能提供極佳的視覺與操作體驗。</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-          </div>
-          <h3>流暢微互動</h3>
-          <p>匠心獨具的細節設計與動態反饋，使每次點擊與瀏覽都充滿令人愉悅的生命力。</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
-          </div>
-          <h3>極致加載效能</h3>
-          <p>現代化代碼架構優化，極速載入，無縫呈現，讓您的訪客告別等待。</p>
-        </div>
+        <h2 class="section-title">項目</h2>
+        <p class="section-desc">我們的服務幫你紀錄你的瞬間</p>
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <p>&copy; 2026 NEXUS. 版權所有。打造數位極致體驗的最佳夥伴。</p>
-    </footer>
+    <!-- Service Pages -->
+    <section class="project-page">
+      <div class="project-content">
+        <div class="project-text">
+          <h3>人像</h3>
+          <p>捕捉您最真實、動人的瞬間。</p>
+        </div>
+        <div class="project-image"></div>
+      </div>
+    </section>
+
+    <section class="project-page">
+      <div class="project-content">
+        <div class="project-text">
+          <h3>短片</h3>
+          <p>用動態影像訴說您的故事。</p>
+        </div>
+        <div class="project-image"></div>
+      </div>
+    </section>
+
+    <section class="project-page">
+      <div class="project-content">
+        <div class="project-text">
+          <h3>線上相簿</h3>
+          <p>隨時隨地，珍藏您的美好回憶。</p>
+        </div>
+        <div class="project-image"></div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-page">
+      <div class="contact-header">
+        <h2>聯絡我</h2>
+      </div>
+      <div class="contact-body">
+        <div class="contact-nav">
+          <div class="nav-thumb">人像</div>
+          <div class="nav-thumb">短片</div>
+          <div class="nav-thumb">線上相簿</div>
+        </div>
+        <div class="contact-info">
+          <p>ZHENDOKU | 石佳弘</p>
+          <p>聯絡電話：+886 0986056305</p>
+          <div class="social-icons">
+            <span>Line</span>
+            <span>IG</span>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <p>&copy; 2026 ZHENDOKU. 版權所有。</p>
+      </footer>
+    </section>
   </div>
 </template>
 
 <script setup>
+import heroImg from '../assets/hero.jpg';
+
 const exploreMore = () => {
   alert('歡迎進入 NEXUS！即將為您開啟探索之旅。');
 };
 
 const scrollToFeatures = () => {
-  const element = document.getElementById('features');
+  const element = document.getElementById('projects');
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+const scrollToSection = (id) => {
+  const element = document.getElementById(id);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth' });
   }
@@ -110,11 +130,9 @@ const scrollToFeatures = () => {
 <style scoped>
 .home-container {
   width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background-color: #0f172a;
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
 }
 
 /* Navbar */
@@ -149,7 +167,7 @@ const scrollToFeatures = () => {
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: 2px;
-  color: #ffffff;
+  color: #fbbf24;;
 }
 
 .nav-links {
@@ -158,15 +176,16 @@ const scrollToFeatures = () => {
 }
 
 .nav-link {
-  color: #94a3b8;
+  color: #000000;
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
   transition: color 0.3s ease;
+  cursor: pointer;
 }
 
-.nav-link:hover {
-  color: #ffffff;
+.nav-link:hover, .nav-link.router-link-active {
+  color: #6366f1;
 }
 
 /* Buttons */
@@ -185,7 +204,7 @@ const scrollToFeatures = () => {
 
 .btn-outline {
   background: transparent;
-  color: #ffffff;
+  color:#000000;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -228,7 +247,6 @@ const scrollToFeatures = () => {
   position: relative;
   width: 100%;
   height: 100vh;
-  min-height: 600px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -236,11 +254,25 @@ const scrollToFeatures = () => {
   text-align: center;
   padding: 0 2rem;
   box-sizing: border-box;
-  background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: transparent;
   overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.hero-image-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 94%;
+  height: 88vh;
+  z-index: 0;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .hero-bg-overlay {
@@ -249,8 +281,7 @@ const scrollToFeatures = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.95) 100%),
-              linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, #0f172a 100%);
+  background: transparent;
   z-index: 1;
 }
 
@@ -287,32 +318,21 @@ const scrollToFeatures = () => {
 }
 
 .hero-title {
-  font-size: 3.75rem;
-  font-weight: 800;
+  font-size: 5rem;
+  font-weight: 900;
   line-height: 1.2;
-  letter-spacing: -1px;
+  letter-spacing: 2px;
+  margin-bottom: 0;
+}
+
+.white-title {
   color: #ffffff;
-  margin-bottom: 1.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4f46e5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-  font-size: 1.25rem;
-  color: #94a3b8;
-  max-width: 650px;
-  line-height: 1.6;
-  margin-bottom: 2.5rem;
-}
-
-.hero-cta {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
+.retro-title {
+  color: #fbbf24; /* 溫暖橘黃色 */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .arrow-icon {
@@ -364,99 +384,135 @@ const scrollToFeatures = () => {
 
 .scroll-text {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #000000;
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 
-/* Features Section */
-.features-section {
-  padding: 6rem 4rem;
-  background-color: #0f172a;
-  position: relative;
-  z-index: 10;
+.project-page {
+  height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  scroll-snap-align: start;
+  box-sizing: border-box;
 }
 
 .section-header {
   text-align: center;
-  max-width: 600px;
-  margin: 0 auto 4rem auto;
 }
 
 .section-title {
-  font-size: 2.25rem;
+  font-size: 3rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin-bottom: 1rem;
 }
 
 .section-desc {
-  font-size: 1.1rem;
-  color: #94a3b8;
+  font-size: 1.5rem;
+  color: #000000;
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.feature-card {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1.25rem;
-  padding: 2.5rem 2rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.feature-card:hover {
-  transform: translateY(-8px);
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-}
-
-.feature-icon {
-  width: 50px;
-  height: 50px;
-  background: rgba(99, 102, 241, 0.1);
-  border-radius: 12px;
+.project-content {
   display: flex;
-  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.project-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  color: #818cf8;
-  margin-bottom: 1.5rem;
-  transition: all 0.3s ease;
+  padding: 4rem;
 }
 
-.feature-card:hover .feature-icon {
-  background: #6366f1;
-  color: #ffffff;
+.project-text h3 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #000000;
 }
 
-.feature-card h3 {
-  font-size: 1.25rem;
-  color: #ffffff;
-  margin-bottom: 0.75rem;
-  font-weight: 600;
+.project-text p {
+  font-size: 1.2rem;
+  color: #000000;
 }
 
-.feature-card p {
-  font-size: 0.95rem;
-  color: #94a3b8;
-  line-height: 1.6;
+.project-image {
+  flex: 1;
+  background-color: #9ca3af;
+  border: 1px solid #e5e7eb;
+  height: 100%;
 }
 
 /* Footer */
 .footer {
-  padding: 3rem 2rem;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 1rem;
   text-align: center;
-  background-color: #0b0f19;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  color: #64748b;
-  font-size: 0.9rem;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.contact-page {
+  height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.contact-header {
+  height: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contact-header h2 {
+  font-size: 4rem;
+  color: #000000;
+}
+
+.contact-body {
+  height: 50%;
+  display: flex;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.contact-nav {
+  flex: 2;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-thumb {
+  width: 100px;
+  height: 100px;
+  background-color: #9ca3af;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contact-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 /* Animations */
