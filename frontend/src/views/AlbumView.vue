@@ -1,9 +1,11 @@
 <template>
   <div class="album-page">
-    <!-- 頂部導航 (假設 App.vue 有全域導航，這裡僅做頁面內容) -->
-    <header class="page-header">
-      <h1 class="title">相簿</h1>
-    </header>
+    <Navbar @scroll-to="scrollToSection" />
+    
+    <div class="content-wrapper">
+      <header class="page-header">
+        <h1 class="title">相簿</h1>
+      </header>
 
     <!-- 相簿選擇器 -->
     <div class="album-carousel-container">
@@ -43,11 +45,15 @@
         </template>
       </masonry-wall>
     </div>
+    </div>
+    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import Navbar from '../components/Navbar.vue';
+import Footer from '../components/Footer.vue';
 import albumsData from '../../../data/albums.json';
 
 const albums = ref([]);
@@ -81,10 +87,19 @@ const selectedAlbum = computed(() =>
 
 <style scoped>
 .album-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--header-height, 80px);
+}
+
+.content-wrapper {
+  flex: 1;
   max-width: 60%;
   margin: 0 auto;
   padding: 2rem 0;
   color: #000;
+  width: 100%;
 }
 
 .page-header {
