@@ -1,6 +1,6 @@
 <template>
   <div class="album-page">
-    <Navbar @scroll-to="scrollToSection" />
+    <Navbar />
     
     <div class="content-wrapper">
       <header class="page-header">

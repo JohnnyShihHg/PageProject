@@ -6,12 +6,11 @@
 
 <style scoped>
 .footer {
-  position: absolute;
-  bottom: 0;
   width: 100%;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   color: #666;
   font-size: 0.8rem;
+  margin-top: auto;
 }
 </style>
