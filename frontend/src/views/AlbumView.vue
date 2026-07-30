@@ -15,7 +15,7 @@
           :class="{ 'active': selectedAlbumId === album.id }"
           @click="selectedAlbumId = album.id"
         >
-          <div class="album-cover"></div>
+          <div class="album-cover" :style="{ backgroundImage: `url(${album.coverUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }"></div>
           <div class="album-info">
             <h3>{{ album.name }}</h3>
             <p>{{ album.count }} 張照片</p>
@@ -25,25 +25,58 @@
     </div>
 
     <!-- 瀑布流內容區塊 -->
-    <div class="masonry-grid">
-      <div v-for="n in 10" :key="n" class="photo-item">
-        <!-- 圖片佔位 -->
-      </div>
+    <div class="masonry-container">
+      <masonry-wall 
+        v-if="!isLoading"
+        :items="selectedAlbum?.photos ?? []" 
+        :ssr-columns="1"
+        :column-width="300" 
+        :gap="18"
+      >
+        <template #default="{ item }">
+          <div 
+            class="photo-item"
+            :style="{ aspectRatio: `${item.width} / ${item.height}` }"
+          >
+            <img :src="item.url" :alt="item.title" loading="lazy" />
+          </div>
+        </template>
+      </masonry-wall>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import albumsData from '../../../data/albums.json';
 
-const selectedAlbumId = ref(1);
-const albums = ref([
-  { id: 1, name: '旅行日記', count: 24 },
-  { id: 2, name: '城市街拍', count: 18 },
-  { id: 3, name: '人像攝影', count: 32 },
-  { id: 4, name: '自然風光', count: 15 },
-  { id: 5, name: '黑白影像', count: 20 },
-]);
+const albums = ref([]);
+const selectedAlbumId = ref(null);
+const isLoading = ref(true);
+
+onMounted(() => {
+  albums.value = albumsData.map(album => ({
+    ...album,
+    count: album.photos.length
+  }));
+  if (albums.value.length > 0) {
+    selectedAlbumId.value = albums.value[0].id;
+    isLoading.value = false;
+  }
+});
+
+watch(selectedAlbumId, async () => {
+  isLoading.value = true;
+  await nextTick();
+  // 模擬載入延遲，確保 DOM 更新後顯示
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 300);
+});
+
+const selectedAlbum = computed(() => 
+  albums.value.find(a => a.id === selectedAlbumId.value)
+);
 </script>
 
 <style scoped>
@@ -67,13 +100,14 @@ const albums = ref([
 /* Carousel */
 .album-carousel-container {
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   margin-bottom: 4rem;
+  white-space: nowrap;
 }
 
 .album-carousel-container::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .album-carousel {
@@ -84,20 +118,34 @@ const albums = ref([
 
 .album-card {
   flex: 0 0 200px;
+  flex-shrink: 0;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.album-card {
+  flex: 0 0 200px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .album-card:hover {
-  transform: translateY(-5px);
+  transform: scale(1.03);
+}
+
+.album-card:not(.active) {
+  opacity: 0.6;
+  filter: brightness(0.7) grayscale(30%);
 }
 
 .album-cover {
   width: 100%;
   height: 150px;
   background-color: #e5e7eb;
-  border: 1px solid #e5e7eb;
+  overflow: hidden;
   margin-bottom: 0.5rem;
+  transition: transform 0.2s ease;
 }
 
 .album-info h3 {
@@ -111,20 +159,42 @@ const albums = ref([
 }
 
 /* Masonry */
-.masonry-grid {
-  column-count: 3;
-  column-gap: 1rem;
+.masonry-container {
+  min-height: 70vh;
 }
 
 .photo-item {
-  break-inside: avoid;
-  margin-bottom: 1rem;
-  background-color: #e5e7eb;
-  border: 1px solid #e5e7eb;
-  height: 200px; /* 模擬不同高度 */
+  /* 確保圖片容器不會強制限制高度 */
+  display: block;
+  width: 100%;
 }
 
-.photo-item:nth-child(even) {
-  height: 300px;
+.photo-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  /* 移除 object-fit 屬性，讓圖片依據寬度自動調整高度 */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.photo-item img[src] {
+  opacity: 1;
+}
+
+.photo-item:hover img {
+  transform: scale(1.02);
+}
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 </style>

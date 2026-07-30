@@ -1,20 +1,7 @@
 <template>
   <div class="home-container">
     <!-- Premium Header/Navbar -->
-    <header class="navbar">
-      <div class="nav-brand">
-        <span class="logo-dot"></span>
-        <span class="logo-text">ZHENDOKU</span>
-      </div>
-      <nav class="nav-links">
-        <span class="nav-link" @click="scrollToSection('projects')">項目</span>
-        <router-link to="/album" class="nav-link">相簿</router-link>
-        <span class="nav-link" @click="scrollToSection('contact')">聯絡我</span>
-      </nav>
-      <div class="nav-action">
-        <button class="btn btn-outline">登入</button>
-      </div>
-    </header>
+    <Navbar @scroll-to="scrollToSection" />
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -97,20 +84,16 @@
             <span>IG</span>
           </div>
         </div>
+        <Footer />
       </div>
-      <footer class="footer">
-        <p>&copy; 2026 ZHENDOKU. 版權所有。</p>
-      </footer>
     </section>
   </div>
 </template>
 
 <script setup>
+import Navbar from './Navbar.vue';
+import Footer from './Footer.vue';
 import heroImg from '../assets/hero.jpg';
-
-const exploreMore = () => {
-  alert('歡迎進入 NEXUS！即將為您開啟探索之旅。');
-};
 
 const scrollToFeatures = () => {
   const element = document.getElementById('projects');
@@ -127,119 +110,27 @@ const scrollToSection = (id) => {
 };
 </script>
 
+<style>
+/* 全域重置，確保沒有頂部空白 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+</style>
+
 <style scoped>
 .home-container {
   width: 100%;
   height: 100vh;
   overflow-y: scroll;
+  overflow-x: hidden;
   scroll-snap-type: y mandatory;
-}
-
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 4rem;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100;
+  /* 移除 padding-top，改用 margin-top 確保內容從 Header 下方開始 */
+  /* 並且確保不會產生頂部空白 */
   box-sizing: border-box;
-}
-
-.nav-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.logo-dot {
-  width: 10px;
-  height: 10px;
-  background-color: #6366f1;
-  border-radius: 50%;
-  box-shadow: 0 0 12px #6366f1;
-}
-
-.logo-text {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: #fbbf24;;
-}
-
-.nav-links {
-  display: flex;
-  gap: 2.5rem;
-}
-
-.nav-link {
-  color: #000000;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.3s ease;
-  cursor: pointer;
-}
-
-.nav-link:hover, .nav-link.router-link-active {
-  color: #6366f1;
-}
-
-/* Buttons */
-.btn {
-  padding: 0.75rem 1.75rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-outline {
-  background: transparent;
-  color:#000000;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #ffffff;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Hero Section */
@@ -247,12 +138,13 @@ const scrollToSection = (id) => {
   position: relative;
   width: 100%;
   height: 100vh;
+  margin-top: 0;
+  padding-top: var(--header-height, 80px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 0 2rem;
   box-sizing: border-box;
   background-color: transparent;
   overflow: hidden;
@@ -294,29 +186,6 @@ const scrollToSection = (id) => {
   align-items: center;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  margin-bottom: 2rem;
-  animation: pulse 2s infinite;
-}
-
-.badge-dot {
-  width: 6px;
-  height: 6px;
-  background-color: #818cf8;
-  border-radius: 50%;
-}
-
 .hero-title {
   font-size: 5rem;
   font-weight: 900;
@@ -331,16 +200,8 @@ const scrollToSection = (id) => {
 }
 
 .retro-title {
-  color: #fbbf24; /* 溫暖橘黃色 */
+  color: #fbbf24;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.arrow-icon {
-  transition: transform 0.3s ease;
-}
-
-.btn-primary:hover .arrow-icon {
-  transform: translateX(4px);
 }
 
 /* Scroll Indicator */
@@ -449,17 +310,6 @@ const scrollToSection = (id) => {
   height: 100%;
 }
 
-/* Footer */
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  padding: 1rem;
-  text-align: center;
-  color: #666;
-  font-size: 0.8rem;
-}
-
 .contact-page {
   height: 100vh;
   width: 100%;
@@ -542,64 +392,6 @@ const scrollToSection = (id) => {
   100% {
     opacity: 0;
     top: 6px;
-  }
-}
-
-/* Responsive Design (RWD) */
-@media (max-width: 1024px) {
-  .navbar {
-    padding: 1.25rem 2rem;
-  }
-  
-  .hero-title {
-    font-size: 3rem;
-  }
-  
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .nav-links {
-    display: none; /* Hide nav links on mobile for simplicity, or we could keep it minimal */
-  }
-  
-  .navbar {
-    padding: 1rem 1.5rem;
-  }
-  
-  .hero-title {
-    font-size: 2.25rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.05rem;
-    margin-bottom: 2rem;
-  }
-  
-  .hero-cta {
-    flex-direction: column;
-    width: 100%;
-    max-width: 300px;
-    gap: 0.75rem;
-  }
-  
-  .btn {
-    width: 100%;
-  }
-  
-  .features-section {
-    padding: 4rem 1.5rem;
-  }
-  
-  .features-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .feature-card {
-    padding: 2rem 1.5rem;
   }
 }
 </style>
