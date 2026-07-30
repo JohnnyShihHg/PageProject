@@ -1,17 +1,37 @@
 <template>
   <header class="navbar" ref="navbarRef">
     <nav class="nav-links">
-      <span class="nav-link" @click="$emit('scroll-to', 'projects')">服務項目</span>
+      <span class="nav-link" @click="scrollToSection('projects')">服務項目</span>
       <router-link to="/album" class="nav-link">相簿</router-link>
-      <span class="nav-link" @click="$emit('scroll-to', 'contact')">聯絡我</span>
+      <span class="nav-link" @click="scrollToSection('contact')">聯絡我</span>
     </nav>
   </header>
 </template>
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { nextTick } from 'vue';
 
+const route = useRoute();
+const router = useRouter();
 const navbarRef = ref(null);
+
+const scrollToSection = async (sectionId) => {
+  // 1. 如果當前不在首頁 (/)，先跳轉回首頁
+  if (route.path !== '/') {
+    await router.push('/');
+    await nextTick(); // 等待首頁 DOM 渲染完成
+  }
+
+  // 2. 執行平滑滾動到指定區塊
+  setTimeout(() => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 100); // 微小延遲確保滾動流暢
+};
 let resizeObserver = null;
 
 const updateHeaderHeight = () => {

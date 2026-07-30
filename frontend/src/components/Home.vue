@@ -1,7 +1,7 @@
 <template>
   <div class="home-container">
     <!-- Premium Header/Navbar -->
-    <Navbar @scroll-to="scrollToSection" />
+    <Navbar />
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -101,13 +101,6 @@ const scrollToFeatures = () => {
     element.scrollIntoView({ behavior: 'smooth' });
   }
 };
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 </script>
 
 <style>
