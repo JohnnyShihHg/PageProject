@@ -1,40 +1,41 @@
 [
   {
     "id": 1,
-    "name": "111",
-    "slug": "111",
+    "name": "旅遊街拍",
+    "slug": "street",
     "coverUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
     "createdAt": "2026-07-28",
     "photos": [
       {
         "id": 1,
-        "title": "20260530_ 歐美翁_NJJ00044",
-        "category": "111",
+        "title": "旅遊街拍 1",
+        "category": "street",
         "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
         "width": 2000,
         "height": 1333
       },
       {
         "id": 2,
-        "title": "20260530_ 歐美翁_NJJ00048",
-        "category": "111",
-        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00048.webp",
+        "title": "旅遊街拍 2",
+        "category": "street",
+        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
         "width": 2000,
         "height": 3000
-      },
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "其他",
+    "slug": "others",
+    "coverUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
+    "createdAt": "2026-07-28",
+    "photos": [
       {
         "id": 3,
-        "title": "20260530_ 歐美翁_NJJ00051",
-        "category": "111",
-        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00051.webp",
-        "width": 2000,
-        "height": 3000
-      },
-      {
-        "id": 4,
-        "title": "20260530_ 歐美翁_NJJ00054",
-        "category": "111",
-        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00054.webp",
+        "title": "其他 1",
+        "category": "others",
+        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
         "width": 2000,
         "height": 3000
       }

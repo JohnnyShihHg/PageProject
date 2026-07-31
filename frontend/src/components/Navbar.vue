@@ -1,8 +1,9 @@
 <template>
   <header class="navbar" ref="navbarRef">
     <nav class="nav-links">
+      <router-link to="/" class="nav-link">Home</router-link>
       <span class="nav-link" @click="scrollToSection('projects')">服務項目</span>
-      <router-link to="/album" class="nav-link">相簿</router-link>
+      <router-link to="/album" class="nav-link">旅遊街拍、其他</router-link>
       <span class="nav-link" @click="scrollToSection('contact')">聯絡我</span>
     </nav>
   </header>
@@ -18,20 +19,19 @@ const router = useRouter();
 const navbarRef = ref(null);
 
 const scrollToSection = async (sectionId) => {
-  // 1. 如果當前不在首頁 (/)，先跳轉回首頁
   if (route.path !== '/') {
     await router.push('/');
-    await nextTick(); // 等待首頁 DOM 渲染完成
+    await nextTick();
   }
 
-  // 2. 執行平滑滾動到指定區塊
   setTimeout(() => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
-  }, 100); // 微小延遲確保滾動流暢
+  }, 100);
 };
+
 let resizeObserver = null;
 
 const updateHeaderHeight = () => {
@@ -43,12 +43,9 @@ const updateHeaderHeight = () => {
 
 onMounted(() => {
   updateHeaderHeight();
-  
-  // 使用 ResizeObserver 監聽尺寸變化
   resizeObserver = new ResizeObserver(() => {
     updateHeaderHeight();
   });
-  
   if (navbarRef.value) {
     resizeObserver.observe(navbarRef.value);
   }
@@ -75,7 +72,6 @@ onBeforeUnmount(() => {
   z-index: 100;
   box-sizing: border-box;
   background-color: #ffffff;
-  /* 移除任何可能的 border-top 或 box-shadow */
   border: none;
   box-shadow: none;
 }
@@ -83,6 +79,7 @@ onBeforeUnmount(() => {
 .nav-links {
   display: flex;
   gap: 2.5rem;
+  align-items: center;
 }
 
 .nav-link {

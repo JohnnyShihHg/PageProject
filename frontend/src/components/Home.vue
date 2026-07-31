@@ -16,53 +16,6 @@
           <span class="retro-title">ZHENDOKU</span>
         </h1>
       </div>
-
-      <!-- Scroll Indicator -->
-      <div class="scroll-indicator" @click="scrollToFeatures">
-        <span class="mouse">
-          <span class="wheel"></span>
-        </span>
-        <span class="scroll-text">向下捲動</span>
-      </div>
-    </section>
-
-    <!-- Projects Intro -->
-    <section id="projects" class="project-page">
-      <div class="section-header">
-        <h2 class="section-title">項目</h2>
-        <p class="section-desc">我們的服務幫你紀錄你的瞬間</p>
-      </div>
-    </section>
-
-    <!-- Service Pages -->
-    <section class="project-page">
-      <div class="project-content">
-        <div class="project-text">
-          <h3>人像</h3>
-          <p>捕捉您最真實、動人的瞬間。</p>
-        </div>
-        <div class="project-image"></div>
-      </div>
-    </section>
-
-    <section class="project-page">
-      <div class="project-content">
-        <div class="project-text">
-          <h3>短片</h3>
-          <p>用動態影像訴說您的故事。</p>
-        </div>
-        <div class="project-image"></div>
-      </div>
-    </section>
-
-    <section class="project-page">
-      <div class="project-content">
-        <div class="project-text">
-          <h3>線上相簿</h3>
-          <p>隨時隨地，珍藏您的美好回憶。</p>
-        </div>
-        <div class="project-image"></div>
-      </div>
     </section>
 
     <!-- Contact Section -->
@@ -72,9 +25,9 @@
       </div>
       <div class="contact-body">
         <div class="contact-nav">
-          <div class="nav-thumb">人像</div>
-          <div class="nav-thumb">短片</div>
-          <div class="nav-thumb">線上相簿</div>
+          <div class="nav-thumb" @click="$router.push('/services/photography')">靜態攝影</div>
+          <div class="nav-thumb" @click="$router.push('/services/video')">動態短片</div>
+          <div class="nav-thumb" @click="$router.push('/album')">相簿</div>
         </div>
         <div class="contact-info">
           <p>ZHENDOKU | 石佳弘</p>
@@ -84,9 +37,9 @@
             <span>IG</span>
           </div>
         </div>
-        <Footer />
       </div>
     </section>
+    <Footer />
   </div>
 </template>
 
@@ -94,13 +47,6 @@
 import Navbar from './Navbar.vue';
 import Footer from './Footer.vue';
 import heroImg from '../assets/hero.jpg';
-
-const scrollToFeatures = () => {
-  const element = document.getElementById('projects');
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
-  }
-};
 </script>
 
 <style>
@@ -118,12 +64,10 @@ html, body {
 <style scoped>
 .home-container {
   width: 100%;
-  height: 100vh;
-  overflow-y: scroll;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  /* 移除 padding-top，改用 margin-top 確保內容從 Header 下方開始 */
-  /* 並且確保不會產生頂部空白 */
   box-sizing: border-box;
 }
 
@@ -131,7 +75,7 @@ html, body {
 .hero-section {
   position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   margin-top: 0;
   padding-top: var(--header-height, 80px);
   display: flex;
@@ -142,7 +86,6 @@ html, body {
   box-sizing: border-box;
   background-color: transparent;
   overflow: hidden;
-  scroll-snap-align: start;
 }
 
 .hero-image-container {
@@ -198,119 +141,12 @@ html, body {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Scroll Indicator */
-.scroll-indicator {
-  position: absolute;
-  bottom: 2rem;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
-}
-
-.scroll-indicator:hover {
-  opacity: 1;
-}
-
-.mouse {
-  width: 24px;
-  height: 38px;
-  border: 2px solid #94a3b8;
-  border-radius: 12px;
-  position: relative;
-  display: block;
-}
-
-.wheel {
-  width: 4px;
-  height: 8px;
-  background-color: #6366f1;
-  border-radius: 2px;
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: scrollWheel 2s infinite;
-}
-
-.scroll-text {
-  font-size: 0.75rem;
-  color: #000000;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.project-page {
-  height: 100vh;
-  width: 100%;
-  background-color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  scroll-snap-align: start;
-  box-sizing: border-box;
-}
-
-.section-header {
-  text-align: center;
-}
-
-.section-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 1rem;
-}
-
-.section-desc {
-  font-size: 1.5rem;
-  color: #000000;
-}
-
-.project-content {
-  display: flex;
-  width: 100%;
-  height: 100%;
-}
-
-.project-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 4rem;
-}
-
-.project-text h3 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  color: #000000;
-}
-
-.project-text p {
-  font-size: 1.2rem;
-  color: #000000;
-}
-
-.project-image {
-  flex: 1;
-  background-color: #9ca3af;
-  border: 1px solid #e5e7eb;
-  height: 100%;
-}
-
 .contact-page {
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  scroll-snap-align: start;
   position: relative;
 }
 
@@ -336,19 +172,27 @@ html, body {
 .contact-nav {
   flex: 2;
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: center;
   align-items: center;
 }
 
 .nav-thumb {
-  width: 100px;
+  width: 120px;
   height: 100px;
-  background-color: #9ca3af;
+  background-color: #f3f4f6;
   border: 1px solid #e5e7eb;
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-thumb:hover {
+  background-color: #e5e7eb;
+  transform: scale(1.05);
 }
 
 .contact-info {
@@ -359,33 +203,4 @@ html, body {
   gap: 0.5rem;
 }
 
-/* Animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
-  }
-  50% {
-    opacity: 0.9;
-    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
-  }
-}
-
-@keyframes scrollWheel {
-  0% {
-    opacity: 0;
-    top: 6px;
-  }
-  30% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0;
-    top: 22px;
-  }
-  100% {
-    opacity: 0;
-    top: 6px;
-  }
-}
 </style>

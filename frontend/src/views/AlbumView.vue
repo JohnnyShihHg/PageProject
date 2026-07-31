@@ -61,6 +61,7 @@ const selectedAlbumId = ref(null);
 const isLoading = ref(true);
 
 onMounted(() => {
+  window.scrollTo(0, 0);
   albums.value = albumsData.map(album => ({
     ...album,
     count: album.photos.length
