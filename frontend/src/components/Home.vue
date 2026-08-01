@@ -6,7 +6,7 @@
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-image-container">
-        <img :src="heroImg" alt="Hero Background" class="hero-image" />
+        <img :src="heroImg" alt="Hero Background" class="hero-image" fetchpriority="high" />
         <div class="hero-bg-overlay"></div>
 
         <div class="hero-content">
@@ -30,14 +30,30 @@
           <h3>人像寫真</h3>
           <p>捕捉自然神韻與獨特氣質，提供個人形象、生活寫真、閨蜜、情侶與婚紗等人像攝影服務，用鏡頭留下最真實的自己。</p>
         </div>
-        <div class="service-placeholder">照片準備中</div>
+        <div v-if="portraitPhoto" class="service-placeholder has-photo">
+          <img
+            :src="portraitPhoto.url"
+            :alt="portraitPhoto.alt || '人像寫真'"
+            :class="{ 'crop-top': isPortraitOrientation(portraitPhoto) }"
+            loading="lazy"
+          />
+        </div>
+        <div v-else class="service-placeholder">照片準備中</div>
       </div>
       <div class="service-panel">
         <div class="service-text">
           <h3>活動紀錄</h3>
           <p>忠實記錄現場每一刻精彩瞬間，提供婚禮紀錄、講座論壇、企業活動、展演側錄等專業攝影與剪輯服務，讓回憶完整保存。</p>
         </div>
-        <div class="service-placeholder">照片準備中</div>
+        <div v-if="eventPhoto" class="service-placeholder has-photo">
+          <img
+            :src="eventPhoto.url"
+            :alt="eventPhoto.alt || '活動紀錄'"
+            :class="{ 'crop-top': isPortraitOrientation(eventPhoto) }"
+            loading="lazy"
+          />
+        </div>
+        <div v-else class="service-placeholder">照片準備中</div>
       </div>
     </section>
 
@@ -68,7 +84,20 @@
 <script setup>
 import Navbar from './Navbar.vue';
 import Footer from './Footer.vue';
-import heroImg from '../assets/hero.jpg';
+import heroImg from '../assets/hero.webp';
+import albumsData from '../../../data/albums.json';
+
+function pickRandomPhoto(category) {
+  const photos = category.activities.flatMap(activity => activity.photos);
+  return photos.length ? photos[Math.floor(Math.random() * photos.length)] : null;
+}
+
+const portraitPhoto = pickRandomPhoto(albumsData.categories.portrait);
+const eventPhoto = pickRandomPhoto(albumsData.categories.event);
+
+function isPortraitOrientation(photo) {
+  return Boolean(photo && photo.height > photo.width);
+}
 </script>
 
 <style>
@@ -193,7 +222,6 @@ html, body {
 
 .service-panel {
   display: flex;
-  min-height: 60vh;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -223,7 +251,7 @@ html, body {
 
 .service-placeholder {
   flex: 1;
-  min-height: 400px;
+  height: 400px;
   background-color: #f3f4f6;
   border: 1px dashed #d1d5db;
   display: flex;
@@ -232,6 +260,25 @@ html, body {
   color: #9ca3af;
   font-size: 0.95rem;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.service-placeholder.has-photo {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+
+.service-placeholder.has-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.service-placeholder.has-photo img.crop-top {
+  object-position: 50% 25%;
 }
 
 @media (max-width: 768px) {
@@ -244,7 +291,7 @@ html, body {
   }
 
   .service-placeholder {
-    min-height: 280px;
+    height: 280px;
   }
 }
 

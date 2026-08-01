@@ -132,7 +132,7 @@ description: 規定 PageProject 專案中 albums.json 的資料結構標準（ca
   - `portrait`:活動名稱、代碼 slug、人物名稱（可留空 → `null`）、日期、標籤。
   - `event`:活動名稱、代碼 slug、日期，`personName` 固定為 `null`。
   - `street`:相簿名稱、代碼 slug、occasion、日期、標籤。
-- 圖片壓縮完成後，必須同時產生**主圖**（寬度 2000px）與**縮圖**（寬度 400px，檔名前綴 `thumb_`）兩份 webp 輸出，兩者都要各自組出 `url` / `thumbUrl`。
+- 圖片壓縮完成後，必須同時產生**主圖**（寬度 2000px）與**縮圖**（寬度 800px，檔名前綴 `thumb_`）兩份 webp 輸出，兩者都要各自組出 `url` / `thumbUrl`。
 - 寫入 `albums.json` 的 `url` / `thumbUrl` 欄位前，必須確認檔名已完成 `encodeURIComponent` 編碼。
 - 每次執行處理新照片後，必須依照上述第 5 點的 photoId 全域遞增規則與第 6 點的 orderIndex 規則，正確計算新照片的 `photoId` 與 `orderIndex`，不可以覆蓋既有照片的欄位。
 

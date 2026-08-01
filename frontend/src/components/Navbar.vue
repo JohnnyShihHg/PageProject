@@ -2,7 +2,7 @@
   <header class="navbar" ref="navbarRef">
     <nav class="nav-links">
       <router-link to="/" class="nav-link">Home</router-link>
-      <span class="nav-link">Event</span>
+      <router-link to="/event" class="nav-link">Event</router-link>
       <router-link to="/album" class="nav-link">Street & Travel</router-link>
       <span class="nav-link">About</span>
     </nav>
