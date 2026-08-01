@@ -1,44 +1,89 @@
-[
-  {
-    "id": 1,
-    "name": "旅遊街拍",
-    "slug": "street",
-    "coverUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
-    "createdAt": "2026-07-28",
-    "photos": [
-      {
-        "id": 1,
-        "title": "旅遊街拍 1",
-        "category": "street",
-        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
-        "width": 2000,
-        "height": 1333
-      },
-      {
-        "id": 2,
-        "title": "旅遊街拍 2",
-        "category": "street",
-        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
-        "width": 2000,
-        "height": 3000
-      }
-    ]
-  },
-  {
-    "id": 2,
-    "name": "其他",
-    "slug": "others",
-    "coverUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
-    "createdAt": "2026-07-28",
-    "photos": [
-      {
-        "id": 3,
-        "title": "其他 1",
-        "category": "others",
-        "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
-        "width": 2000,
-        "height": 3000
-      }
-    ]
+{
+  "categories": {
+    "portrait": {
+      "displayName": "人像攝影",
+      "activities": [
+        {
+          "activityId": "act_20260530_歐美only",
+          "activityName": "歐美翁",
+          "personName": "路人",
+          "date": "2026-05-30",
+          "photos": [
+            {
+              "photoId": "p_0001",
+              "filename": "20260530_ 歐美翁_NJJ00044.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00044.webp",
+              "width": 2000,
+              "height": 1333,
+              "orderIndex": 1,
+              "alt": "",
+              "tags": [
+                "歐美",
+                "歐美翁",
+                "COS",
+                "cosplayer"
+              ]
+            },
+            {
+              "photoId": "p_0002",
+              "filename": "20260530_ 歐美翁_NJJ00048.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00048.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00048.webp",
+              "width": 2000,
+              "height": 3000,
+              "orderIndex": 2,
+              "alt": "",
+              "tags": [
+                "歐美",
+                "歐美翁",
+                "COS",
+                "cosplayer"
+              ]
+            },
+            {
+              "photoId": "p_0003",
+              "filename": "20260530_ 歐美翁_NJJ00051.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00051.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00051.webp",
+              "width": 2000,
+              "height": 3000,
+              "orderIndex": 3,
+              "alt": "",
+              "tags": [
+                "歐美",
+                "歐美翁",
+                "COS",
+                "cosplayer"
+              ]
+            },
+            {
+              "photoId": "p_0004",
+              "filename": "20260530_ 歐美翁_NJJ00054.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00054.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_20260530_%20%E6%AD%90%E7%BE%8E%E7%BF%81_NJJ00054.webp",
+              "width": 2000,
+              "height": 3000,
+              "orderIndex": 4,
+              "alt": "",
+              "tags": [
+                "歐美",
+                "歐美翁",
+                "COS",
+                "cosplayer"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "event": {
+      "displayName": "活動紀錄",
+      "activities": []
+    },
+    "street": {
+      "displayName": "旅遊街拍",
+      "albums": []
+    }
   }
-]
+}
