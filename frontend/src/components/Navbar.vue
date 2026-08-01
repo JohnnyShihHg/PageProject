@@ -3,7 +3,7 @@
     <nav class="nav-links">
       <router-link to="/" class="nav-link">Home</router-link>
       <span class="nav-link">Event</span>
-      <span class="nav-link">Street & Travel</span>
+      <router-link to="/album" class="nav-link">Street & Travel</router-link>
       <span class="nav-link">About</span>
     </nav>
   </header>

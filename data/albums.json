@@ -82,8 +82,100 @@
       "activities": []
     },
     "street": {
-      "displayName": "旅遊街拍",
-      "albums": []
+      "displayName": "Street & Travel",
+      "albums": [
+        {
+          "albumId": "album_2026_老弟日本追櫻花",
+          "albumName": "老弟追櫻花",
+          "occasion": null,
+          "date": "2026-03-27",
+          "tags": [
+            "日本",
+            "櫻花",
+            "追櫻花"
+          ],
+          "coverPhotoId": "p_0005",
+          "photos": [
+            {
+              "photoId": "p_0005",
+              "filename": "F4501406.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501406.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501406.webp",
+              "width": 2000,
+              "height": 3000,
+              "orderIndex": 1,
+              "alt": "",
+              "tags": []
+            },
+            {
+              "photoId": "p_0006",
+              "filename": "F4501415.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501415.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501415.webp",
+              "width": 2000,
+              "height": 3000,
+              "orderIndex": 2,
+              "alt": "",
+              "tags": []
+            },
+            {
+              "photoId": "p_0007",
+              "filename": "F4501436.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501436.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501436.webp",
+              "width": 2000,
+              "height": 1333,
+              "orderIndex": 3,
+              "alt": "",
+              "tags": []
+            },
+            {
+              "photoId": "p_0008",
+              "filename": "F4501565.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501565.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501565.webp",
+              "width": 2000,
+              "height": 1333,
+              "orderIndex": 4,
+              "alt": "",
+              "tags": []
+            },
+            {
+              "photoId": "p_0009",
+              "filename": "F4501569.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501569.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501569.webp",
+              "width": 2000,
+              "height": 3000,
+              "orderIndex": 5,
+              "alt": "",
+              "tags": []
+            },
+            {
+              "photoId": "p_0010",
+              "filename": "F4501585.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501585.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501585.webp",
+              "width": 2000,
+              "height": 1333,
+              "orderIndex": 6,
+              "alt": "",
+              "tags": []
+            },
+            {
+              "photoId": "p_0011",
+              "filename": "F4501587.webp",
+              "url": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/F4501587.webp",
+              "thumbUrl": "https://pub-7f52f0ce64e04ac9b534b404269eb8f3.r2.dev/thumb_F4501587.webp",
+              "width": 2000,
+              "height": 1333,
+              "orderIndex": 7,
+              "alt": "",
+              "tags": []
+            }
+          ]
+        }
+      ]
     }
   }
 }
