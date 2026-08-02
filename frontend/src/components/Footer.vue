@@ -12,5 +12,6 @@
   color: #666;
   font-size: 0.8rem;
   margin-top: auto;
+  border-top: 1px solid #e5e7eb;
 }
 </style>

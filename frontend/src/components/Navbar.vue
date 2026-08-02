@@ -64,6 +64,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   background-color: #ffffff;
   border: none;
+  border-bottom: 1px solid #e5e7eb;
   box-shadow: none;
 }
 

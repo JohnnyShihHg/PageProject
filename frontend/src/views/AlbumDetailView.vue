@@ -113,6 +113,12 @@ onMounted(() => {
   margin-bottom: 1rem;
 }
 
+@media (min-width: 1600px) and (max-width: 2200px) {
+  .content-wrapper {
+    max-width: 68%;
+  }
+}
+
 @media (max-width: 1024px) {
   .content-wrapper {
     max-width: 85%;

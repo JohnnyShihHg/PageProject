@@ -12,7 +12,7 @@
 
           <div class="hero-content">
             <h1 class="hero-title">
-              <span class="white-title">您好我是</span><br>
+              <span class="white-title">HI, I'm</span><br>
               <span class="retro-title">ZHENDOKU</span>
             </h1>
           </div>
@@ -197,14 +197,14 @@ html, body {
 
 .hero-content {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: 2rem;
+  left: 2rem;
   z-index: 10;
   max-width: 850px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .hero-title {
@@ -221,7 +221,7 @@ html, body {
 }
 
 .retro-title {
-  color: #fbbf24;
+  color: #ffffff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -256,6 +256,10 @@ html, body {
 .service-panel {
   display: flex;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.service-panel:first-child {
+  border-top: 1px solid #e5e7eb;
 }
 
 .service-text {
