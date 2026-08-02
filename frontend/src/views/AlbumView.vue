@@ -9,9 +9,10 @@
 
       <!-- 相簿選擇網格 -->
       <div class="album-grid">
-        <div
+        <router-link
           v-for="album in albums"
           :key="album.albumId"
+          :to="`/album/${album.albumId}`"
           class="album-card"
         >
           <div
@@ -22,7 +23,7 @@
             <h3>{{ album.albumName }}</h3>
             <p>{{ album.photos.length }} 張照片</p>
           </div>
-        </div>
+        </router-link>
       </div>
     </div>
     <Footer />
@@ -82,6 +83,9 @@ onMounted(() => {
 }
 
 .album-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
   cursor: pointer;
   transition: transform 0.2s ease;
 }

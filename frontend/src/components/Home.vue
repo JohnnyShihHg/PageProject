@@ -27,10 +27,14 @@
     <section id="projects" class="services-section">
       <div class="service-panel">
         <div class="service-text">
-          <h3>人像寫真</h3>
+          <h3 class="service-link" @click="$router.push('/event/portrait')">人像寫真</h3>
           <p>捕捉自然神韻與獨特氣質，提供個人形象、生活寫真、閨蜜、情侶與婚紗等人像攝影服務，用鏡頭留下最真實的自己。</p>
         </div>
-        <div v-if="portraitPhoto" class="service-placeholder has-photo">
+        <div
+          v-if="portraitPhoto"
+          class="service-placeholder has-photo service-link"
+          @click="$router.push('/event/portrait')"
+        >
           <img
             :src="portraitPhoto.url"
             :alt="portraitPhoto.alt || '人像寫真'"
@@ -38,14 +42,18 @@
             loading="lazy"
           />
         </div>
-        <div v-else class="service-placeholder">照片準備中</div>
+        <div v-else class="service-placeholder service-link" @click="$router.push('/event/portrait')">照片準備中</div>
       </div>
       <div class="service-panel">
         <div class="service-text">
-          <h3>活動紀錄</h3>
+          <h3 class="service-link" @click="$router.push('/event/activity')">活動紀錄</h3>
           <p>忠實記錄現場每一刻精彩瞬間，提供婚禮紀錄、講座論壇、企業活動、展演側錄等專業攝影與剪輯服務，讓回憶完整保存。</p>
         </div>
-        <div v-if="eventPhoto" class="service-placeholder has-photo">
+        <div
+          v-if="eventPhoto"
+          class="service-placeholder has-photo service-link"
+          @click="$router.push('/event/activity')"
+        >
           <img
             :src="eventPhoto.url"
             :alt="eventPhoto.alt || '活動紀錄'"
@@ -53,7 +61,7 @@
             loading="lazy"
           />
         </div>
-        <div v-else class="service-placeholder">照片準備中</div>
+        <div v-else class="service-placeholder service-link" @click="$router.push('/event/activity')">照片準備中</div>
       </div>
     </section>
 
@@ -61,9 +69,9 @@
     <section id="contact" class="contact-page">
       <div class="contact-body">
         <div class="contact-nav">
-          <div class="nav-thumb" @click="$router.push('/services/photography')">Portrait</div>
-          <div class="nav-thumb" @click="$router.push('/services/video')">Event</div>
-          <div class="nav-thumb">Street & Travel</div>
+          <div class="nav-thumb" @click="$router.push('/event/portrait')">Portrait</div>
+          <div class="nav-thumb" @click="$router.push('/event/activity')">Event</div>
+          <div class="nav-thumb" @click="$router.push('/album')">Street & Travel</div>
           <div class="nav-thumb">About</div>
         </div>
         <div class="contact-info">
@@ -239,6 +247,14 @@ html, body {
   font-weight: 700;
   color: #000000;
   margin: 0 0 1rem 0;
+}
+
+.service-link {
+  cursor: pointer;
+}
+
+.service-text h3.service-link:hover {
+  text-decoration: underline;
 }
 
 .service-text p {

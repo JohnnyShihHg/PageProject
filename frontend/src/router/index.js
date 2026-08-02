@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../components/Home.vue'
 import AlbumView from '../views/AlbumView.vue'
+import AlbumDetailView from '../views/AlbumDetailView.vue'
 import EventChoiceView from '../views/EventChoiceView.vue'
 import GalleryView from '../views/GalleryView.vue'
 import StaticServiceView from '../views/StaticServiceView.vue'
@@ -9,6 +10,7 @@ import VideoServiceView from '../views/VideoServiceView.vue'
 const routes = [
   { path: '/', component: Home },
   { path: '/album', component: AlbumView },
+  { path: '/album/:albumId', component: AlbumDetailView, props: true },
   { path: '/event', component: EventChoiceView },
   { path: '/event/portrait', component: GalleryView, props: { type: 'portrait' } },
   { path: '/event/activity', component: GalleryView, props: { type: 'activity' } },

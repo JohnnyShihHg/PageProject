@@ -4,6 +4,7 @@
       <div class="group-divider" :style="{ marginTop: `${gap}px`, marginBottom: `${gap}px` }">
         <span class="group-divider-name">{{ group.name }}</span>
         <span class="group-divider-date">{{ group.date }}</span>
+        <span v-if="group.tags && group.tags.length" class="group-divider-tags">{{ group.tags.join('、') }}</span>
       </div>
 
       <masonry-wall
@@ -71,6 +72,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .group-divider {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -93,6 +95,15 @@ onBeforeUnmount(() => {
   font-size: 16px;
   color: #999;
   letter-spacing: 0.04em;
+}
+
+.group-divider-tags {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 14px;
+  font-style: italic;
+  color: #999;
 }
 
 .photo-item {

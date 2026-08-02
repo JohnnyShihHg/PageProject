@@ -1,16 +1,22 @@
 <template>
   <header class="navbar" ref="navbarRef">
     <nav class="nav-links">
-      <router-link to="/" class="nav-link">Home</router-link>
-      <router-link to="/event" class="nav-link">Event</router-link>
-      <router-link to="/album" class="nav-link">Street & Travel</router-link>
+      <router-link to="/" class="nav-link" :class="{ active: isHomeActive }">Home</router-link>
+      <router-link to="/event" class="nav-link" :class="{ active: isEventActive }">Event</router-link>
+      <router-link to="/album" class="nav-link" :class="{ active: isStreetActive }">Street & Travel</router-link>
       <span class="nav-link">About</span>
     </nav>
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const isHomeActive = computed(() => route.path === '/');
+const isEventActive = computed(() => route.path.startsWith('/event'));
+const isStreetActive = computed(() => route.path.startsWith('/album'));
 
 const navbarRef = ref(null);
 
@@ -71,6 +77,11 @@ onBeforeUnmount(() => {
   font-weight: 500;
   transition: color 0.3s ease;
   cursor: pointer;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  text-decoration: underline;
 }
 
 @media (max-width: 1024px) {

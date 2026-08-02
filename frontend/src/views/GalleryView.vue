@@ -65,6 +65,7 @@ onMounted(() => {
 }
 
 .page-header {
+  height: 58px;
   text-align: center;
   margin-bottom: 3rem;
 }
