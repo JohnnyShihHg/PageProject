@@ -72,7 +72,7 @@
           <div class="nav-thumb" @click="$router.push('/event/portrait')">Portrait</div>
           <div class="nav-thumb" @click="$router.push('/event/activity')">Event</div>
           <div class="nav-thumb" @click="$router.push('/album')">Street & Travel</div>
-          <div class="nav-thumb">About</div>
+          <div class="nav-thumb" @click="$router.push('/about')">About</div>
         </div>
         <div class="contact-info">
           <p>ZHENDOKU | 石佳弘</p>

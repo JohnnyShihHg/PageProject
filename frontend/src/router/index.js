@@ -4,8 +4,8 @@ import AlbumView from '../views/AlbumView.vue'
 import AlbumDetailView from '../views/AlbumDetailView.vue'
 import EventChoiceView from '../views/EventChoiceView.vue'
 import GalleryView from '../views/GalleryView.vue'
-import StaticServiceView from '../views/StaticServiceView.vue'
-import VideoServiceView from '../views/VideoServiceView.vue'
+import AboutView from '../views/AboutView.vue'
+import ContactView from '../views/ContactView.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -14,8 +14,8 @@ const routes = [
   { path: '/event', component: EventChoiceView },
   { path: '/event/portrait', component: GalleryView, props: { type: 'portrait' } },
   { path: '/event/activity', component: GalleryView, props: { type: 'activity' } },
-  { path: '/services/photography', component: StaticServiceView },
-  { path: '/services/video', component: VideoServiceView }
+  { path: '/about', component: AboutView },
+  { path: '/contact', component: ContactView }
 ]
 
 const router = createRouter({

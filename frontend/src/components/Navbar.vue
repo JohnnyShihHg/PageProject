@@ -4,7 +4,8 @@
       <router-link to="/" class="nav-link" :class="{ active: isHomeActive }">Home</router-link>
       <router-link to="/event" class="nav-link" :class="{ active: isEventActive }">Event</router-link>
       <router-link to="/album" class="nav-link" :class="{ active: isStreetActive }">Street & Travel</router-link>
-      <span class="nav-link">About</span>
+      <router-link to="/about" class="nav-link" :class="{ active: isAboutActive }">About</router-link>
+      <router-link to="/contact" class="nav-link" :class="{ active: isContactActive }">Contact</router-link>
     </nav>
   </header>
 </template>
@@ -17,6 +18,8 @@ const route = useRoute();
 const isHomeActive = computed(() => route.path === '/');
 const isEventActive = computed(() => route.path.startsWith('/event'));
 const isStreetActive = computed(() => route.path.startsWith('/album'));
+const isAboutActive = computed(() => route.path.startsWith('/about'));
+const isContactActive = computed(() => route.path.startsWith('/contact'));
 
 const navbarRef = ref(null);
 
