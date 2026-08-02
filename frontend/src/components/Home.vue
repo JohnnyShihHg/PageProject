@@ -61,8 +61,8 @@
     <section id="contact" class="contact-page">
       <div class="contact-body">
         <div class="contact-nav">
-          <div class="nav-thumb" @click="$router.push('/services/photography')">人像寫真</div>
-          <div class="nav-thumb" @click="$router.push('/services/video')">活動紀錄</div>
+          <div class="nav-thumb" @click="$router.push('/services/photography')">Portrait</div>
+          <div class="nav-thumb" @click="$router.push('/services/video')">Event</div>
           <div class="nav-thumb">Street & Travel</div>
           <div class="nav-thumb">About</div>
         </div>

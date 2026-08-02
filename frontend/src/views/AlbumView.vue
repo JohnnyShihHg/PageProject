@@ -107,6 +107,7 @@ onMounted(() => {
 .album-info p {
   font-size: 0.85rem;
   color: #666;
+  font-family: 'Noto Sans TC', sans-serif;
 }
 
 @media (max-width: 1024px) {
