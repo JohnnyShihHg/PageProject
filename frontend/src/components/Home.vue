@@ -5,82 +5,90 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
-      <div class="hero-image-container">
-        <img :src="heroImg" alt="Hero Background" class="hero-image" fetchpriority="high" />
-        <div class="hero-bg-overlay"></div>
+      <div class="content-wrapper">
+        <div class="hero-image-container">
+          <img :src="heroImg" alt="Hero Background" class="hero-image" fetchpriority="high" />
+          <div class="hero-bg-overlay"></div>
 
-        <div class="hero-content">
-          <h1 class="hero-title">
-            <span class="white-title">您好我是</span><br>
-            <span class="retro-title">ZHENDOKU</span>
-          </h1>
+          <div class="hero-content">
+            <h1 class="hero-title">
+              <span class="white-title">您好我是</span><br>
+              <span class="retro-title">ZHENDOKU</span>
+            </h1>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Intro Section -->
     <section class="intro-section">
-      <p class="intro-text">用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能捕捉最自然的情緒與光影，為你留下有溫度的畫面。</p>
+      <div class="content-wrapper">
+        <p class="intro-text">用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能捕捉最自然的情緒與光影，為你留下有溫度的畫面。</p>
+      </div>
     </section>
 
     <!-- Services Section -->
     <section id="projects" class="services-section">
-      <div class="service-panel">
-        <div class="service-text">
-          <h3 class="service-link" @click="$router.push('/event/portrait')">人像寫真</h3>
-          <p>捕捉自然神韻與獨特氣質，提供個人形象、生活寫真、閨蜜、情侶與婚紗等人像攝影服務，用鏡頭留下最真實的自己。</p>
+      <div class="content-wrapper">
+        <div class="service-panel">
+          <div class="service-text">
+            <h3 class="service-link" @click="$router.push('/event/portrait')">人像寫真</h3>
+            <p>捕捉自然神韻與獨特氣質，提供個人形象、生活寫真、閨蜜、情侶與婚紗等人像攝影服務，用鏡頭留下最真實的自己。</p>
+          </div>
+          <div
+            v-if="portraitPhoto"
+            class="service-placeholder has-photo service-link"
+            @click="$router.push('/event/portrait')"
+          >
+            <img
+              :src="portraitPhoto.url"
+              :alt="portraitPhoto.alt || '人像寫真'"
+              :class="{ 'crop-top': isPortraitOrientation(portraitPhoto) }"
+              loading="lazy"
+            />
+          </div>
+          <div v-else class="service-placeholder service-link" @click="$router.push('/event/portrait')">照片準備中</div>
         </div>
-        <div
-          v-if="portraitPhoto"
-          class="service-placeholder has-photo service-link"
-          @click="$router.push('/event/portrait')"
-        >
-          <img
-            :src="portraitPhoto.url"
-            :alt="portraitPhoto.alt || '人像寫真'"
-            :class="{ 'crop-top': isPortraitOrientation(portraitPhoto) }"
-            loading="lazy"
-          />
+        <div class="service-panel">
+          <div class="service-text">
+            <h3 class="service-link" @click="$router.push('/event/activity')">活動紀錄</h3>
+            <p>忠實記錄現場每一刻精彩瞬間，提供婚禮紀錄、講座論壇、企業活動、展演側錄等專業攝影與剪輯服務，讓回憶完整保存。</p>
+          </div>
+          <div
+            v-if="eventPhoto"
+            class="service-placeholder has-photo service-link"
+            @click="$router.push('/event/activity')"
+          >
+            <img
+              :src="eventPhoto.url"
+              :alt="eventPhoto.alt || '活動紀錄'"
+              :class="{ 'crop-top': isPortraitOrientation(eventPhoto) }"
+              loading="lazy"
+            />
+          </div>
+          <div v-else class="service-placeholder service-link" @click="$router.push('/event/activity')">照片準備中</div>
         </div>
-        <div v-else class="service-placeholder service-link" @click="$router.push('/event/portrait')">照片準備中</div>
-      </div>
-      <div class="service-panel">
-        <div class="service-text">
-          <h3 class="service-link" @click="$router.push('/event/activity')">活動紀錄</h3>
-          <p>忠實記錄現場每一刻精彩瞬間，提供婚禮紀錄、講座論壇、企業活動、展演側錄等專業攝影與剪輯服務，讓回憶完整保存。</p>
-        </div>
-        <div
-          v-if="eventPhoto"
-          class="service-placeholder has-photo service-link"
-          @click="$router.push('/event/activity')"
-        >
-          <img
-            :src="eventPhoto.url"
-            :alt="eventPhoto.alt || '活動紀錄'"
-            :class="{ 'crop-top': isPortraitOrientation(eventPhoto) }"
-            loading="lazy"
-          />
-        </div>
-        <div v-else class="service-placeholder service-link" @click="$router.push('/event/activity')">照片準備中</div>
       </div>
     </section>
 
     <!-- Contact Section -->
     <section id="contact" class="contact-page">
-      <div class="contact-body">
-        <div class="contact-nav">
-          <div class="nav-thumb" @click="$router.push('/event/portrait')">Portrait</div>
-          <div class="nav-thumb" @click="$router.push('/event/activity')">Event</div>
-          <div class="nav-thumb" @click="$router.push('/album')">Street & Travel</div>
-          <div class="nav-thumb" @click="$router.push('/about')">About</div>
-        </div>
-        <div class="contact-info">
-          <p>ZHENDOKU | 石佳弘</p>
-          <p>聯絡電話：+886 0986056305</p>
-          <div class="social-icons">
-            <span>LINE：shallreturn</span>
-            <span>INSTAGRAM：<a class="social-link" href="https://www.instagram.com/j_zh_fc/" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
-            <span>THREADS：<a class="social-link" href="https://www.threads.com/@j_zh_fc" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
+      <div class="content-wrapper">
+        <div class="contact-body">
+          <div class="contact-nav">
+            <div class="nav-thumb" @click="$router.push('/event/portrait')">Portrait</div>
+            <div class="nav-thumb" @click="$router.push('/event/activity')">Event</div>
+            <div class="nav-thumb" @click="$router.push('/album')">Street & Travel</div>
+            <div class="nav-thumb" @click="$router.push('/about')">About</div>
+          </div>
+          <div class="contact-info">
+            <p>ZHENDOKU | 石佳弘</p>
+            <p>PHONE：+886 0986056305</p>
+            <div class="social-icons">
+              <span>LINE：shallreturn</span>
+              <span>INSTAGRAM：<a class="social-link" href="https://www.instagram.com/j_zh_fc/" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
+              <span>THREADS：<a class="social-link" href="https://www.threads.com/@j_zh_fc" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
+            </div>
           </div>
         </div>
       </div>
@@ -130,12 +138,31 @@ html, body {
   box-sizing: border-box;
 }
 
+.content-wrapper {
+  max-width: 60%;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .content-wrapper {
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 640px) {
+  .content-wrapper {
+    max-width: 100%;
+  }
+}
+
 /* Hero Section */
 .hero-section {
   position: relative;
   width: 100%;
   margin-top: 0;
-  padding: calc(var(--header-height, 80px) + 3rem) 2rem 3rem;
+  padding: calc(var(--header-height, 80px) + 3rem) 2rem 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -148,7 +175,6 @@ html, body {
 
 .hero-image-container {
   position: relative;
-  width: 54%;
   height: 51vh;
   z-index: 0;
 }
@@ -216,7 +242,7 @@ html, body {
   font-size: 14px;
   line-height: 1.9;
   color: #4b5563;
-  margin: 0;
+  margin: 0 auto;
 }
 
 /* Services Section */
@@ -225,7 +251,6 @@ html, body {
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
-  margin-bottom: 4rem;
 }
 
 .service-panel {

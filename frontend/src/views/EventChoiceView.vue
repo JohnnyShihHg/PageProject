@@ -81,6 +81,18 @@ onMounted(() => {
   width: 100%;
 }
 
+@media (max-width: 1024px) {
+  .content-wrapper {
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 640px) {
+  .content-wrapper {
+    max-width: 100%;
+  }
+}
+
 .page-header {
   text-align: center;
   margin-bottom: 3rem;

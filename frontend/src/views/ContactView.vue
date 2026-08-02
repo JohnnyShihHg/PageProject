@@ -8,7 +8,7 @@
 
       <div class="contact-info">
         <p>ZHENDOKU | 石佳弘</p>
-        <p>聯絡電話：+886 0986056305</p>
+        <p>PHONE：+886 0986056305</p>
         <div class="social-icons">
           <span>LINE：shallreturn</span>
           <span>INSTAGRAM：<a class="social-link" href="https://www.instagram.com/j_zh_fc/" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
@@ -41,12 +41,24 @@ onMounted(() => {
 
 .content-wrapper {
   flex: 1;
-  max-width: 700px;
+  max-width: 60%;
   margin: 0 auto;
   padding: 3rem 2rem;
   color: #000;
   width: 100%;
   box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .content-wrapper {
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 640px) {
+  .content-wrapper {
+    max-width: 100%;
+  }
 }
 
 .page-header {
