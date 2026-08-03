@@ -6,24 +6,73 @@
         <h1 class="title">Contact</h1>
       </header>
 
-      <div class="contact-info">
-        <p>ZHENDOKU | 石佳弘</p>
-        <p>PHONE：+886 0986056305</p>
-        <div class="social-icons">
-          <span>LINE：shallreturn</span>
-          <span>INSTAGRAM：<a class="social-link" href="https://www.instagram.com/j_zh_fc/" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
-          <span>THREADS：<a class="social-link" href="https://www.threads.com/@j_zh_fc" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
+      <form class="contact-form" @submit.prevent="handleSubmit">
+        <div class="form-group">
+          <label class="form-label">Name*</label>
+          <div class="name-fields">
+            <div class="field-wrapper">
+              <input v-model="form.firstName" type="text" class="form-input" required />
+              <span class="field-caption">First Name</span>
+            </div>
+            <div class="field-wrapper">
+              <input v-model="form.lastName" type="text" class="form-input" required />
+              <span class="field-caption">Last Name</span>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div class="form-group">
+          <label class="form-label">Company</label>
+          <div class="field-wrapper">
+            <input v-model="form.company" type="text" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email*</label>
+          <div class="field-wrapper">
+            <input v-model="form.email" type="email" class="form-input" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subject*</label>
+          <div class="field-wrapper">
+            <input v-model="form.subject" type="text" class="form-input" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message*</label>
+          <div class="field-wrapper">
+            <textarea v-model="form.message" class="form-textarea" rows="6" required></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-button">Submit</button>
+      </form>
     </div>
     <Footer />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, reactive } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
+
+const form = reactive({
+  firstName: '',
+  lastName: '',
+  company: '',
+  email: '',
+  subject: '',
+  message: ''
+});
+
+function handleSubmit() {
+  console.log('contact form submit (not wired up yet)', { ...form });
+}
 
 onMounted(() => {
   window.scrollTo(0, 0);
@@ -71,33 +120,104 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.contact-info {
+.contact-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 2rem;
+  max-width: 700px;
+  margin: 4rem auto 0;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: start;
+  gap: 1rem;
+}
+
+.form-label {
+  padding-top: 0.7rem;
+  font-size: 14px;
+  font-weight: 600;
   color: #000000;
-  text-align: center;
 }
 
-.contact-info p {
-  margin: 0;
-}
-
-.social-icons {
+.field-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.4rem;
 }
 
-.social-link,
-.social-link:link,
-.social-link:visited,
-.social-link:hover,
-.social-link:active {
+.name-fields {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.name-fields .field-wrapper {
+  flex: 1;
+}
+
+.field-caption {
+  font-size: 12px;
+  font-style: italic;
+  color: #9ca3af;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  background-color: #e5e7eb;
+  border: none;
+  border-radius: 2px;
+  padding: 0.75rem 1rem;
+  font-size: 14px;
+  font-family: inherit;
   color: #000000;
-  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: 2px solid #9ca3af;
+  outline-offset: -2px;
+}
+
+.submit-button {
+  align-self: flex-start;
+  margin-left: 110px;
+  padding: 0.9rem 2.5rem;
+  background-color: #2d2d2d;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-button:hover {
+  background-color: #000000;
+}
+
+@media (max-width: 640px) {
+  .form-group {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .name-fields {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .submit-button {
+    margin-left: 0;
+  }
 }
 </style>

@@ -81,15 +81,6 @@
             <div class="nav-thumb" @click="$router.push('/album')">Street & Travel</div>
             <div class="nav-thumb" @click="$router.push('/about')">About</div>
           </div>
-          <div class="contact-info">
-            <p>ZHENDOKU | 石佳弘</p>
-            <p>PHONE：+886 0986056305</p>
-            <div class="social-icons">
-              <span>LINE：shallreturn</span>
-              <span>INSTAGRAM：<a class="social-link" href="https://www.instagram.com/j_zh_fc/" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
-              <span>THREADS：<a class="social-link" href="https://www.threads.com/@j_zh_fc" target="_blank" rel="noopener noreferrer">j_zh_fc</a></span>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -162,7 +153,7 @@ html, body {
   position: relative;
   width: 100%;
   margin-top: 0;
-  padding: calc(var(--header-height, 80px) + 3rem) 2rem 0;
+  padding: calc(var(--header-height, 80px) + 5rem) 2rem 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -384,30 +375,6 @@ html, body {
 .nav-thumb:hover {
   background-color: #e5e7eb;
   transform: scale(1.05);
-}
-
-.contact-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.5rem;
-  color: #000000;
-}
-
-.social-icons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.social-link,
-.social-link:link,
-.social-link:visited,
-.social-link:hover,
-.social-link:active {
-  color: #000000;
-  text-decoration: none;
 }
 
 </style>

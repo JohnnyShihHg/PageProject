@@ -7,8 +7,11 @@
       </header>
 
       <div class="about-content">
-        <p>ZHENDOKU | 石佳弘</p>
-        <p>用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能捕捉最自然的情緒與光影，為你留下有溫度的畫面。</p>
+        <p class="about-name">HI,我是石佳弘</p>
+        <p>做過不少事情、幹過不少鳥事，同時帶著各位到處走走，攝影這件事情總能把這些瞬間記錄下來。</p>
+        <p class="about-services">人像攝影 / 活動紀錄 / 旅行隨團攝影</p>
+        <p>歡迎到我的SNS觀看其他照片。</p>
+        <p class="about-quote">Per aspera ad astra.</p>
       </div>
     </div>
     <Footer />
@@ -67,19 +70,23 @@ onMounted(() => {
 }
 
 .about-content {
-  text-align: center;
+  text-align: left;
 }
 
 .about-content p {
-  font-size: 1rem;
+  font-size: 16px;
   line-height: 1.9;
-  color: #4b5563;
+  color: #000000;
   margin: 0 0 1rem 0;
 }
 
-.about-content p:first-child {
+.about-name {
   font-weight: 600;
   color: #000000;
-  font-size: 1.1rem;
+  font-size: 18px;
+}
+
+.about-quote {
+  font-style: italic;
 }
 </style>
