@@ -89,18 +89,30 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
 import Navbar from './Navbar.vue';
 import Footer from './Footer.vue';
 import heroImg from '../assets/hero.webp';
-import albumsData from '../../../data/albums.json';
+import { loadAlbums } from '../api/albums';
 
 function pickRandomPhoto(category) {
   const photos = category.activities.flatMap(activity => activity.photos);
   return photos.length ? photos[Math.floor(Math.random() * photos.length)] : null;
 }
 
-const portraitPhoto = pickRandomPhoto(albumsData.categories.portrait);
-const eventPhoto = pickRandomPhoto(albumsData.categories.event);
+const portraitPhoto = ref(null);
+const eventPhoto = ref(null);
+
+onMounted(async () => {
+  try {
+    const data = await loadAlbums();
+    portraitPhoto.value = pickRandomPhoto(data.categories.portrait);
+    eventPhoto.value = pickRandomPhoto(data.categories.event);
+  } catch (err) {
+    // 取不到資料時維持「照片準備中」佔位，不讓整頁掛掉
+    console.error(err);
+  }
+});
 
 function isPortraitOrientation(photo) {
   return Boolean(photo && photo.height > photo.width);

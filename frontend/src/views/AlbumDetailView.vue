@@ -24,7 +24,7 @@ import { ref, computed, onMounted } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
 import PhotoWall from '../components/PhotoWall.vue';
-import albumsData from '../../../data/albums.json';
+import { loadAlbums } from '../api/albums';
 
 const props = defineProps({
   albumId: {
@@ -35,14 +35,17 @@ const props = defineProps({
 
 const RELATED_ALBUMS_LIMIT = 4;
 
+const albumsData = ref(null);
+const streetAlbums = computed(() => albumsData.value?.categories.street.albums ?? []);
+
 const album = computed(() =>
-  albumsData.categories.street.albums.find((a) => a.albumId === props.albumId)
+  streetAlbums.value.find((a) => a.albumId === props.albumId)
 );
 
 const relatedAlbums = computed(() => {
   if (!album.value || !album.value.tags?.length) return [];
   const currentTags = new Set(album.value.tags);
-  return albumsData.categories.street.albums
+  return streetAlbums.value
     .filter((a) => a.albumId !== album.value.albumId)
     .filter((a) => (a.tags || []).some((tag) => currentTags.has(tag)))
     .slice(0, RELATED_ALBUMS_LIMIT);
@@ -60,19 +63,25 @@ const relatedGroups = computed(() =>
 const groups = ref([]);
 const isLoading = ref(true);
 
-onMounted(() => {
+onMounted(async () => {
   window.scrollTo(0, 0);
-  if (album.value) {
-    groups.value = [
-      {
-        name: album.value.albumName,
-        date: album.value.date,
-        photos: album.value.photos,
-        tags: album.value.tags
-      }
-    ];
+  try {
+    albumsData.value = await loadAlbums();
+    if (album.value) {
+      groups.value = [
+        {
+          name: album.value.albumName,
+          date: album.value.date,
+          photos: album.value.photos,
+          tags: album.value.tags
+        }
+      ];
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    isLoading.value = false;
   }
-  isLoading.value = false;
 });
 </script>
 

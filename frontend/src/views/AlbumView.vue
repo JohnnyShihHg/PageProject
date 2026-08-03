@@ -34,17 +34,23 @@
 import { ref, onMounted, computed } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
-import albumsData from '../../../data/albums.json';
+import { loadAlbums } from '../api/albums';
 
 const albums = ref([]);
-const categoryDisplayName = computed(() => albumsData.categories.street.displayName);
+const albumsData = ref(null);
+const categoryDisplayName = computed(() => albumsData.value?.categories.street.displayName ?? '');
 
-onMounted(() => {
+onMounted(async () => {
   window.scrollTo(0, 0);
-  albums.value = albumsData.categories.street.albums.map(album => ({
-    ...album,
-    previewUrl: album.photos[Math.floor(Math.random() * album.photos.length)]?.thumbUrl ?? ''
-  }));
+  try {
+    albumsData.value = await loadAlbums();
+    albums.value = albumsData.value.categories.street.albums.map(album => ({
+      ...album,
+      previewUrl: album.photos[Math.floor(Math.random() * album.photos.length)]?.thumbUrl ?? ''
+    }));
+  } catch (err) {
+    console.error(err);
+  }
 });
 </script>
 

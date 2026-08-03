@@ -33,7 +33,7 @@
 import { ref, onMounted } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
-import albumsData from '../../../data/albums.json';
+import { loadAlbums } from '../api/albums';
 
 const options = ref([]);
 
@@ -41,7 +41,7 @@ function isPortraitOrientation(photo) {
   return Boolean(photo && photo.height > photo.width);
 }
 
-function buildOption(key, to) {
+function buildOption(albumsData, key, to) {
   const category = albumsData.categories[key];
   const photos = category.activities.flatMap(activity => activity.photos);
   const photo = photos.length ? photos[Math.floor(Math.random() * photos.length)] : null;
@@ -55,12 +55,17 @@ function buildOption(key, to) {
   };
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.scrollTo(0, 0);
-  options.value = [
-    buildOption('portrait', '/event/portrait'),
-    buildOption('event', '/event/activity')
-  ];
+  try {
+    const albumsData = await loadAlbums();
+    options.value = [
+      buildOption(albumsData, 'portrait', '/event/portrait'),
+      buildOption(albumsData, 'event', '/event/activity')
+    ];
+  } catch (err) {
+    console.error(err);
+  }
 });
 </script>
 

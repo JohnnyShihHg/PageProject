@@ -21,7 +21,7 @@ import { ref, computed, onMounted } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
 import PhotoWall from '../components/PhotoWall.vue';
-import albumsData from '../../../data/albums.json';
+import { loadAlbums } from '../api/albums';
 
 const props = defineProps({
   type: {
@@ -31,19 +31,29 @@ const props = defineProps({
 });
 
 const categoryKey = computed(() => (props.type === 'activity' ? 'event' : 'portrait'));
-const categoryDisplayName = computed(() => albumsData.categories[categoryKey.value].displayName);
+
+const albumsData = ref(null);
+const categoryDisplayName = computed(
+  () => albumsData.value?.categories[categoryKey.value].displayName ?? ''
+);
 
 const groups = ref([]);
 const isLoading = ref(true);
 
-onMounted(() => {
+onMounted(async () => {
   window.scrollTo(0, 0);
-  groups.value = albumsData.categories[categoryKey.value].activities.map((activity) => ({
-    name: activity.activityName,
-    date: activity.date,
-    photos: activity.photos
-  }));
-  isLoading.value = false;
+  try {
+    albumsData.value = await loadAlbums();
+    groups.value = albumsData.value.categories[categoryKey.value].activities.map((activity) => ({
+      name: activity.activityName,
+      date: activity.date,
+      photos: activity.photos
+    }));
+  } catch (err) {
+    console.error(err);
+  } finally {
+    isLoading.value = false;
+  }
 });
 </script>
 
