@@ -7,7 +7,7 @@
     <section class="hero-section">
       <div class="content-wrapper">
         <div class="hero-image-container">
-          <img :src="heroImg" alt="Hero Background" class="hero-image" fetchpriority="high" />
+          <img src="/hero.webp" alt="Hero Background" class="hero-image" fetchpriority="high" />
           <div class="hero-bg-overlay"></div>
 
           <div class="hero-content">
@@ -92,7 +92,6 @@
 import { ref, onMounted } from 'vue';
 import Navbar from './Navbar.vue';
 import Footer from './Footer.vue';
-import heroImg from '../assets/hero.webp';
 import { loadAlbums } from '../api/albums';
 
 function pickRandomPhoto(category) {

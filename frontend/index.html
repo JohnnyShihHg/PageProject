@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Hero 圖是 LCP 元素。放在 public/ 並在這裡預載，讓瀏覽器的 preload scanner
+      一掃 HTML 就開始下載；若改回從 JS import，發現時機會延後到 bundle 解析完成之後。
+    -->
+    <link rel="preload" as="image" href="/hero.webp" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
