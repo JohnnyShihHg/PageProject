@@ -50,6 +50,10 @@ export const updateCollection = (id, patch) =>
 export const updatePhoto = (photoId, patch) =>
   request(`/api/admin/photos/${encodeURIComponent(photoId)}`, { method: 'PATCH', body: patch })
 
+/** photoIds 的順序就是新順序，必須是該相簿的完整清單（API 會擋不完整的請求） */
+export const reorderPhotos = (collectionId, photoIds) =>
+  request('/api/admin/photos/reorder', { method: 'POST', body: { collectionId, photoIds } })
+
 export const listTags = () => request('/api/admin/tags')
 
 export const createTag = (name) => request('/api/admin/tags', { method: 'POST', body: { name } })

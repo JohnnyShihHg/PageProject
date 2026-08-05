@@ -49,14 +49,61 @@
         </section>
 
         <section class="panel">
-          <h2>照片 alt</h2>
+          <h2>照片順序與 alt</h2>
           <p class="hint">
-            alt 是給搜尋引擎與螢幕報讀軟體看的替代文字。改完會即時送出，
-            公開站最慢 5 分鐘後生效（API 有邊緣快取）。
+            拖曳左側把手可調整順序，手機或鍵盤請用 ↑ ↓ 按鈕。
+            <strong>順序要按「儲存順序」才會寫入</strong>；alt 則是逐張即時送出。
+            兩者在公開站都最慢 5 分鐘後生效（API 有邊緣快取）。
           </p>
 
+          <div class="order-bar">
+            <button type="button" :disabled="!orderDirty || savingOrder" @click="saveOrder">
+              {{ savingOrder ? '儲存中…' : '儲存順序' }}
+            </button>
+            <button type="button" class="ghost" :disabled="!orderDirty || savingOrder" @click="resetOrder">
+              還原
+            </button>
+            <span v-if="orderMsg" :class="['msg', orderMsg.ok ? 'ok' : 'bad']">{{ orderMsg.text }}</span>
+            <span v-else-if="orderDirty" class="msg dim">順序已變更，尚未儲存</span>
+          </div>
+
           <ul class="photos">
-            <li v-for="p in col.photos" :key="p.photoId" class="photo">
+            <li
+              v-for="(p, i) in orderedPhotos"
+              :key="p.photoId"
+              class="photo"
+              :class="{ dragging: dragSourceId === p.photoId, over: dragOverId === p.photoId }"
+              :draggable="dragArmedId === p.photoId"
+              @dragstart="onDragStart(p, $event)"
+              @dragover.prevent="dragOverId = p.photoId"
+              @dragleave="onDragLeave(p)"
+              @drop.prevent="onDrop(p)"
+              @dragend="onDragEnd"
+            >
+              <div class="order-col">
+                <span class="pos">{{ i + 1 }}</span>
+                <button
+                  type="button"
+                  class="handle"
+                  :aria-label="`第 ${i + 1} 張，拖曳可調整順序`"
+                  @pointerdown="dragArmedId = p.photoId"
+                  @pointerup="dragArmedId = null"
+                >
+                  ⠿
+                </button>
+                <button type="button" class="nudge" :disabled="i === 0" aria-label="上移" @click="move(i, -1)">
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  class="nudge"
+                  :disabled="i === orderedPhotos.length - 1"
+                  aria-label="下移"
+                  @click="move(i, 1)"
+                >
+                  ↓
+                </button>
+              </div>
               <img :src="p.thumbUrl" :alt="p.alt || p.filename" loading="lazy" />
               <div class="photo-body">
                 <div class="photo-meta">
@@ -99,7 +146,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import AsyncState from '../components/AsyncState.vue'
-import { listCollections, updateCollection, updatePhoto } from '../api/admin'
+import { listCollections, updateCollection, updatePhoto, reorderPhotos } from '../api/admin'
 
 const props = defineProps({
   collectionId: { type: String, required: true },
@@ -121,6 +168,90 @@ const categoryLabel = computed(() => CATEGORY_LABELS[col.value?.category] ?? col
 
 const isAltDirty = (p) => (altDrafts[p.photoId] ?? '') !== p.alt
 
+// --- 排序 ---------------------------------------------------------------
+// 畫面上的順序只是一份 photoId 的草稿，按下儲存才寫進 D1。照片本身仍然存在
+// col.photos 裡，這樣拖曳時不會動到 alt 草稿與各自的儲存狀態。
+const photoOrder = ref([]) // 目前畫面上的順序
+const savedOrder = ref([]) // 已經寫進 D1 的順序
+const savingOrder = ref(false)
+const orderMsg = ref(null)
+const dragSourceId = ref(null)
+const dragOverId = ref(null)
+// 只有從把手按下去才把 li 設成可拖曳 —— 否則整列可拖，行內的文字輸入框會沒辦法選字
+const dragArmedId = ref(null)
+
+const photoById = computed(() =>
+  Object.fromEntries((col.value?.photos ?? []).map((p) => [p.photoId, p]))
+)
+const orderedPhotos = computed(() => photoOrder.value.map((id) => photoById.value[id]))
+const orderDirty = computed(() => photoOrder.value.join('\n') !== savedOrder.value.join('\n'))
+
+function moveId(list, from, to) {
+  const next = [...list]
+  const [moved] = next.splice(from, 1)
+  next.splice(to, 0, moved)
+  return next
+}
+
+function move(index, delta) {
+  const target = index + delta
+  if (target < 0 || target >= photoOrder.value.length) return
+  photoOrder.value = moveId(photoOrder.value, index, target)
+  orderMsg.value = null
+}
+
+function onDragStart(p, e) {
+  dragSourceId.value = p.photoId
+  orderMsg.value = null
+  // 一定要寫入 dataTransfer：Firefox 沒有資料就不會真的開始拖曳。
+  // 實際的排序是靠 dragSourceId 算的，這裡的內容只是為了讓拖曳成立。
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('text/plain', p.photoId)
+}
+
+function onDragLeave(p) {
+  if (dragOverId.value === p.photoId) dragOverId.value = null
+}
+
+function onDrop(target) {
+  const from = photoOrder.value.indexOf(dragSourceId.value)
+  const to = photoOrder.value.indexOf(target.photoId)
+  if (from !== -1 && to !== -1 && from !== to) {
+    photoOrder.value = moveId(photoOrder.value, from, to)
+  }
+  onDragEnd()
+}
+
+function onDragEnd() {
+  dragSourceId.value = null
+  dragOverId.value = null
+  dragArmedId.value = null
+}
+
+function resetOrder() {
+  photoOrder.value = [...savedOrder.value]
+  orderMsg.value = null
+}
+
+async function saveOrder() {
+  savingOrder.value = true
+  orderMsg.value = null
+  try {
+    const ids = [...photoOrder.value]
+    const byId = photoById.value
+    await reorderPhotos(col.value.id, ids)
+    savedOrder.value = ids
+    // 讓 col.photos 跟著新順序走，並更新每張的 orderIndex，
+    // 否則畫面上的資料會跟 D1 不一致，下次比對 dirty 就會判斷錯誤。
+    col.value.photos = ids.map((id, i) => Object.assign(byId[id], { orderIndex: i + 1 }))
+    orderMsg.value = { ok: true, text: '順序已儲存' }
+  } catch (e) {
+    orderMsg.value = { ok: false, text: e.message }
+  } finally {
+    savingOrder.value = false
+  }
+}
+
 async function load() {
   loading.value = true
   error.value = null
@@ -139,6 +270,10 @@ async function load() {
     form.personName = found.personName ?? ''
     form.tags = found.tags.join(', ')
     for (const p of found.photos) altDrafts[p.photoId] = p.alt
+    // API 已依 order_index 排好，直接沿用
+    photoOrder.value = found.photos.map((p) => p.photoId)
+    savedOrder.value = [...photoOrder.value]
+    orderMsg.value = null
   } catch (e) {
     error.value = e
   } finally {
@@ -303,11 +438,69 @@ button:disabled {
   gap: 0.9rem;
 }
 
+.order-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.msg.dim {
+  color: var(--muted);
+}
+
+button.ghost {
+  border-color: transparent;
+  color: var(--muted);
+}
+
 .photo {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 2.25rem 96px 1fr;
   gap: 1rem;
   align-items: start;
+  border-radius: 6px;
+}
+
+.photo.dragging {
+  opacity: 0.4;
+}
+
+/* 放開會插在這一列的位置，用上緣的線標示落點 */
+.photo.over {
+  box-shadow: inset 0 2px 0 0 var(--accent);
+}
+
+.order-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.pos {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.handle {
+  padding: 0.1rem 0.35rem;
+  border-color: transparent;
+  color: var(--muted);
+  cursor: grab;
+  line-height: 1;
+  touch-action: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+.nudge {
+  padding: 0.1rem 0.35rem;
+  line-height: 1;
+  font-size: 0.8rem;
 }
 
 .photo img {

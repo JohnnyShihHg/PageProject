@@ -10,7 +10,10 @@
 
 ## 交接狀態（接手前先讀這段）
 
-**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2~6 未開始。下一步是 Phase 2（只剩「拖曳排序」一項，因 D6 已縮小）。
+**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅（2026-08-06）、Phase 3~6 未開始。下一步是 Phase 3（上傳，最大一塊）。
+
+**⚠️ Phase 2 的 PageWorker 改動尚未部署。** `POST /api/admin/photos/reorder` 只存在本機，
+正式 API 還沒有這支端點。要部署得 `cd G:\PageWorker && npx wrangler deploy`（Johnny 決定時機）。
 
 **目前線上的東西**
 
@@ -200,13 +203,28 @@ PUT    /api/admin/content            編輯文案
 > **改 `.dev.vars` 後 `wrangler dev` 不會熱重載，必須重啟**，否則會測到舊的值。
 
 ### Phase 2 — 排序
-- [ ] `POST /api/admin/photos/reorder`（批次更新 `order_index`）
-- [ ] 後台拖曳排序
+- [x] `POST /api/admin/photos/reorder`（批次更新 `order_index`）
+- [x] 後台拖曳排序
 - ~~修 `AlbumView.vue` 的隨機封面~~ → **刻意不做，見 D6**
 - ~~設定 `cover_photo_id`~~ → API 已在 Phase 1 實作完，但依 D6 不影響公開站
-- **驗收**：後台調整順序後，公開站的照片排列跟著改變（注意 §6 陷阱二的快取）。
+- **驗收**：✅ API 10/10（含 6 種不合法輸入）；瀏覽器實測拖曳與 ↑↓ 後按儲存，
+  順序落到 D1，繞快取的公開 API 也跟著改變。
 
 > Phase 2 因為 D6 縮小到只剩「排序」一項，是所有 Phase 裡最小的一塊。
+
+> **reorder 刻意要求送出整個相簿的完整清單**（不多不少不重複），而不是只送有動到的幾筆。
+> 少送一張的話那張的 `order_index` 會與別人重複，排序就變成未定義；前端本來就握有
+> 完整清單，整份送回來是最不容易出錯的介面。不符合直接回 400 並說明差在哪。
+>
+> 目前 `(collection_id, order_index)` **沒有**唯一約束，所以可以直接依序覆寫。
+> 若之後補上唯一索引，`admin.ts` 那段就得改成兩階段更新（先挪到暫時值），否則會撞約束。
+
+> **拖曳的 `dragstart` 一定要寫 `dataTransfer.setData()`。** 沒寫的話 Chrome 還是會動，
+> **Firefox 則完全不會開始拖曳** —— 本機測試時就是靠 CDP 攔截到「拖曳項目數 = 0」才發現。
+> 排序實際上是用 `dragSourceId` 算的，setData 的內容只是為了讓拖曳成立。
+
+> **HTML5 拖曳在手機上不管用**，所以每一列另外給了 ↑ ↓ 按鈕；那組按鈕同時也是鍵盤操作的路徑。
+> 之後若做 Phase 3 的上傳排序，沿用同一組互動。
 
 ### Phase 3 — 上傳（最大一塊）
 - [ ] 把 PageWorker 的 ingest 驗證／寫入邏輯抽成共用函式（CLI 與網頁共用，見 D3）
