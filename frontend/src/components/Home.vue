@@ -7,7 +7,21 @@
     <section class="hero-section">
       <div class="content-wrapper">
         <div class="hero-image-container">
-          <img src="/hero.webp" alt="Hero Background" class="hero-image" fetchpriority="high" />
+          <!--
+            四個尺寸由 src/assets/hero.webp（2400x1600 母片）以 sharp q80 產生。
+            上限鎖在 1600：加更大的候選會讓高解析桌機下載得比原本更多，LCP 反而退步。
+            sizes 對應 .content-wrapper 的三段斷點（100% / 85% / 60%），略為高估以求安全。
+            ⚠️ 改這裡的 srcset/sizes 時，index.html 的 preload 必須同步改，
+               不然 preload 會抓到不同的檔案，變成下載兩張圖。
+          -->
+          <img
+            src="/hero.webp"
+            srcset="/hero-768.webp 768w, /hero-1024.webp 1024w, /hero-1280.webp 1280w, /hero.webp 1600w"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 85vw, 60vw"
+            alt="夜晚街頭人群的黑白攝影作品"
+            class="hero-image"
+            fetchpriority="high"
+          />
           <div class="hero-bg-overlay"></div>
 
           <div class="hero-content">

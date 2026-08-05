@@ -47,8 +47,19 @@
     <!--
       Hero 圖是 LCP 元素。放在 public/ 並在這裡預載，讓瀏覽器的 preload scanner
       一掃 HTML 就開始下載；若改回從 JS import，發現時機會延後到 bundle 解析完成之後。
+
+      ⚠️ imagesrcset / imagesizes 必須與 Home.vue 的 <img> 完全一致。
+         只要有一邊不同，preload 選中的檔案就會和 <img> 實際要的不同，
+         結果是下載兩張 hero 圖，LCP 比不做 srcset 還糟。改一邊就要改另一邊。
     -->
-    <link rel="preload" as="image" href="/hero.webp" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href="/hero.webp"
+      imagesrcset="/hero-768.webp 768w, /hero-1024.webp 1024w, /hero-1280.webp 1280w, /hero.webp 1600w"
+      imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 85vw, 60vw"
+      fetchpriority="high"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
