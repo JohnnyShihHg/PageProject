@@ -1,0 +1,118 @@
+/*
+  後台的視覺刻意與公開站分開：公開站是攝影作品集（純白、大留白、內容為主），
+  後台是工具（資訊密度高、看得出可點擊的東西在哪）。共用同一套 CSS 只會讓兩邊互相牽制。
+*/
+
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --surface-hover: #f0f0f0;
+  --line: #e4e4e4;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+  --accent: #1a1a1a;
+  --accent-soft: #ececec;
+  --warn-bg: #fff8e6;
+  --warn-line: #f0dca8;
+  --warn-text: #8a6100;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131313;
+    --surface: #1a1a1a;
+    --surface-hover: #242424;
+    --line: #2e2e2e;
+    --text: #ededed;
+    --muted: #9a9a9a;
+    --accent: #ededed;
+    --accent-soft: #2b2b2b;
+    --warn-bg: #2a2214;
+    --warn-line: #4d3f1c;
+    --warn-text: #e0b862;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.35rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 2rem 0 0.75rem;
+}
+
+p {
+  margin: 0 0 0.75rem;
+}
+
+a {
+  color: var(--text);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--surface-hover);
+}
+
+.page-intro {
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+/* Phase 尚未實作的頁面共用的佔位樣式。
+   刻意做得像「施工中」而不是像壞掉的空白頁 —— 空白頁分不出是沒做還是出錯。 */
+.placeholder {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 2rem;
+  background: var(--surface);
+}
+
+.placeholder h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.placeholder ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+}
+
+.placeholder li {
+  margin-bottom: 0.3rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}

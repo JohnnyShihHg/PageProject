@@ -111,10 +111,16 @@ PUT    /api/admin/content            編輯文案
 - [x] 寫下這份 PLAN.md
 - [ ] 建立 Vite + Vue 3 骨架（與 `frontend/` 同技術棧，不另學）
 - [ ] `member/wrangler.jsonc`：Worker + Static Assets，SPA fallback 沿用 `frontend/worker/index.js` 的做法
-- [ ] Cloudflare Access 設定（**Johnny 在 Dashboard 操作，我無法代勞**）：建立 Zero Trust 組織、加 Email OTP、把 member Worker 網址設為 Access 應用
-- [ ] Worker 端驗 `Cf-Access-Jwt-Assertion`（驗簽章、`aud`、`exp`；**不要對登入方式做假設**，見 D2）
 - [ ] member 網址加進 PageWorker 的 `ALLOWED_ORIGINS` 並 `wrangler deploy`
-- **驗收**：能登入，看到空殼頁面；未登入者被擋。
+- **驗收**：部署後看得到空殼頁面。
+
+> **⚠️ 認證刻意排到最後（Johnny 2026-08-05 決定）。**
+> 開發期間 member Worker 是**沒有任何保護**的公開網址。空殼階段沒有風險，
+> 真正的曝險點是「寫入功能接上並部署」的那一刻 —— 屆時任何知道網址的人都能刪照片。
+>
+> **因此開發期的規則：寫入功能在本機 `wrangler dev` 測試，
+> 部署上去的版本不要帶 `ADMIN_TOKEN`（或任何能寫 PageWorker 的憑證）。**
+> 等 Phase 6 的 Access 上線後再把憑證放進去。這條規則在 Phase 6 完成前不要拿掉。
 
 ### Phase 1 — 讀取與文字編輯（風險最低，先有用再說）
 - [ ] `GET /api/admin/collections`
@@ -146,11 +152,18 @@ PUT    /api/admin/content            編輯文案
 - [ ] 後台文案編輯畫面
 - **驗收**：把 API 打掛，About 頁仍顯示 fallback 文字而非空白。
 
-### Phase 5 — 刪除（刻意最後）
+### Phase 5 — 刪除（功能面最後）
 - [ ] `DELETE /api/admin/photos/:id`、`DELETE /api/admin/collections/:id`
 - [ ] 二次確認 UI
 - [ ] **預設只刪 D1，R2 檔案保留**（D5）
 - **驗收**：刪除後公開站不再顯示，但 R2 檔案仍在、可還原。
+
+### Phase 6 — 認證（Johnny 指定排在最後）
+- [ ] Cloudflare Access 設定（**Johnny 在 Dashboard 操作，我無法代勞**）：建立 Zero Trust 組織、加 Email OTP、把 member Worker 網址設為 Access 應用
+- [ ] Worker 端驗 `Cf-Access-Jwt-Assertion`（驗簽章、`aud`、`exp`；**不要對登入方式做假設**，見 D2）
+- [ ] 把 `ADMIN_TOKEN` 等憑證放進部署版本（在此之前刻意不放，見 Phase 0 的警告）
+- [ ] 從公開站放一個進入後台的入口
+- **驗收**：未登入者被擋在 Access；登入後所有功能正常。
 
 ---
 

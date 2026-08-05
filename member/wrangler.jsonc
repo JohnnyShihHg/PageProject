@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "member",
+  "compatibility_date": "2026-08-02",
+  "main": "./worker/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // 與公開站相同：不用 "single-page-application"，那會讓任何不存在的網址都回
+    // HTTP 200 且 Worker 根本不會被呼叫。設 "none" 才能由 worker/index.js
+    // 依 src/router/paths.js 判斷是否為合法路由。
+    "not_found_handling": "none"
+  }
+}
