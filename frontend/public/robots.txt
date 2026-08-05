@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pageproject.pageworker.workers.dev/sitemap.xml
