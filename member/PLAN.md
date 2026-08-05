@@ -109,10 +109,21 @@ PUT    /api/admin/content            編輯文案
 ### Phase 0 — 清場與骨架
 - [x] `backend/` 改名為 `member/`，刪除 `go.mod` / `go.sum`（Gin + MongoDB 殘骸，無原始碼；git 有紀錄可救回）
 - [x] 寫下這份 PLAN.md
-- [ ] 建立 Vite + Vue 3 骨架（與 `frontend/` 同技術棧，不另學）
-- [ ] `member/wrangler.jsonc`：Worker + Static Assets，SPA fallback 沿用 `frontend/worker/index.js` 的做法
-- [ ] member 網址加進 PageWorker 的 `ALLOWED_ORIGINS` 並 `wrangler deploy`
-- **驗收**：部署後看得到空殼頁面。
+- [x] 建立 Vite + Vue 3 骨架（與 `frontend/` 同技術棧，不另學）
+- [x] `member/wrangler.jsonc`：Worker + Static Assets，SPA fallback 沿用 `frontend/worker/index.js` 的做法
+- [x] 首次部署 → **https://member.pageworker.workers.dev**
+- [ ] member 網址加進 PageWorker 的 `ALLOWED_ORIGINS` 並 `wrangler deploy`（等 Phase 1 真的要呼叫 API 時再做）
+- **驗收**：✅ 部署後 6 條合法路由回 200、5 個亂打網址回 404、靜態資產正常、noindex 生效。
+
+> **member 是獨立的 Worker，現有的 Git 整合不會自動部署它。**
+> `pageproject` 那個 Cloudflare 專案只綁 `frontend/`。member 目前一律用
+> `cd member && npx wrangler deploy` 手動部署（或 `npm run deploy`）。
+> 之後要不要幫它也接 Git 整合是 Dashboard 的設定，尚未做。
+
+> **首次部署後新的 workers.dev 子網域會有幾分鐘傳播延遲**，期間所有路徑
+> （含靜態資產）都回 `404 + error code: 1042`，看起來像 Worker 壞掉。
+> 那是 Worker 還沒被叫用就被邊緣擋掉，**不是程式問題，等 DNS 解析出來就好**。
+> 2026-08-05 首次部署踩過一次。
 
 > **⚠️ 認證刻意排到最後（Johnny 2026-08-05 決定）。**
 > 開發期間 member Worker 是**沒有任何保護**的公開網址。空殼階段沒有風險，
