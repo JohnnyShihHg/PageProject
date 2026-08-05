@@ -12,8 +12,8 @@
 
 **進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅（2026-08-06）、Phase 3~6 未開始。下一步是 Phase 3（上傳，最大一塊）。
 
-**⚠️ Phase 2 的 PageWorker 改動尚未部署。** `POST /api/admin/photos/reorder` 只存在本機，
-正式 API 還沒有這支端點。要部署得 `cd G:\PageWorker && npx wrangler deploy`（Johnny 決定時機）。
+`POST /api/admin/photos/reorder` 已於 2026-08-06 部署到正式 API（version `906124f3`，
+前一版 `7639d861` 是退路）。正式站的後台仍然沒有 `ADMIN_TOKEN`，所以瀏覽器那條路徑照舊回 503。
 
 **目前線上的東西**
 
