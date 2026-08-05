@@ -4,7 +4,42 @@
 > **決策理由比決策本身重要** —— 沒有理由的決定，下一個人只會照著改掉。
 > 每完成一項就更新「進度」欄位，不要另外開新檔案記錄。
 
-最後更新：2026-08-05
+最後更新：2026-08-05（Phase 0、1 完成後收工）
+
+---
+
+## 交接狀態（接手前先讀這段）
+
+**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2~6 未開始。下一步是 Phase 2（只剩「拖曳排序」一項，因 D6 已縮小）。
+
+**目前線上的東西**
+
+| 位置 | 網址 | 狀態 |
+|---|---|---|
+| 公開站正式 | `pageproject.pageworker.workers.dev` | SEO/OG、hero srcset、soft 404 都已上線 |
+| 公開站預覽 | `dev-pageproject.pageworker.workers.dev` | 同上 |
+| API | `pageworker.pageworker.workers.dev` | 已含全部 admin 端點 |
+| **後台** | `member.pageworker.workers.dev` | **可瀏覽，但管理功能回 503（刻意的，見 Phase 0 警告）** |
+
+**分支狀態**
+- `PageProject`：`dev` 領先 `master` 4 個 commit（member 的全部內容）。**尚未合併 master，刻意的** —— 後台還在裸奔，等 Phase 6 的 Access 上線再上正式站。
+- `PageWorker`：`master` 已是最新且已部署。
+- `SharpProject`：`master` 已是最新。
+
+**要在本機開發後台，需要同時跑兩個服務**
+```
+cd G:\PageWorker      && npx wrangler dev --port 8791   # API（用本機 D1，不會動到正式資料）
+cd G:\PageProject\member && npx wrangler dev --port 8790   # 後台
+```
+先把 `member/.dev.vars.example` 複製成 `.dev.vars` 並填入 `ADMIN_TOKEN`
+（值同 `G:\SharpProject\.env` 的 `WORKER_ADMIN_TOKEN`），`PAGEWORKER_URL` 填 `http://127.0.0.1:8791`。
+
+**⚠️ 改完 `.dev.vars` 一定要重啟 `wrangler dev`**，它不會熱重載，否則你會測到舊的值（2026-08-05 被騙過一次）。
+
+本機 D1 與正式 D1 是分開的：本機有 4 個相簿 27 張（舊資料），正式有 5 個相簿 33 張。
+`wrangler.jsonc` 的 D1 設定是 `"remote": false`，所以本機開發不會動到正式資料 —— 這點已實測確認。
+
+---
 
 ---
 
@@ -76,6 +111,17 @@ Worker 跑不了 sharp（原生模組），也不為此引入 Cloudflare Images�
 
 ### D5. 刪除功能排最後，且預設只刪 D1 不刪 R2
 唯一不可逆的功能。誤刪時 R2 還留著檔案就救得回來。
+
+### D6. 公開站的封面「隨機挑」是刻意保留的，不要改
+`frontend/src/views/AlbumView.vue:49` 用 `Math.random()` 從相簿裡挑一張當封面，
+所以每次重新整理封面都會換。**2026-08-05 Johnny 明確表示這樣就好，不用調整。**
+
+**看起來很像 bug，但不是。** 若未來有人（含 AI）發現 `collections.cover_photo_id`
+欄位存在卻沒被公開站使用，請先回頭讀這段再決定，不要當成待修的缺陷。
+
+連帶影響：後台的「設定封面」API（`PATCH /collections/:id` 的 `coverPhotoId`）
+已經實作且會驗證照片歸屬，但**目前只影響後台列表的縮圖，不影響公開站**。
+要讓它影響公開站，就得推翻這個決定。
 
 ---
 
@@ -153,12 +199,14 @@ PUT    /api/admin/content            編輯文案
 > 本機開發：複製 `.dev.vars.example` 為 `.dev.vars`（已 gitignore）。
 > **改 `.dev.vars` 後 `wrangler dev` 不會熱重載，必須重啟**，否則會測到舊的值。
 
-### Phase 2 — 排序與封面
+### Phase 2 — 排序
 - [ ] `POST /api/admin/photos/reorder`（批次更新 `order_index`）
 - [ ] 後台拖曳排序
-- [ ] 設定 `cover_photo_id`
-- [ ] **修 `AlbumView.vue:49`**：改用 `cover_photo_id`，沒設定才 fallback 到第一張（目前是隨機挑，每次重整封面都會變）
-- **驗收**：排序與封面在公開站正確反映。
+- ~~修 `AlbumView.vue` 的隨機封面~~ → **刻意不做，見 D6**
+- ~~設定 `cover_photo_id`~~ → API 已在 Phase 1 實作完，但依 D6 不影響公開站
+- **驗收**：後台調整順序後，公開站的照片排列跟著改變（注意 §6 陷阱二的快取）。
+
+> Phase 2 因為 D6 縮小到只剩「排序」一項，是所有 Phase 裡最小的一塊。
 
 ### Phase 3 — 上傳（最大一塊）
 - [ ] 把 PageWorker 的 ingest 驗證／寫入邏輯抽成共用函式（CLI 與網頁共用，見 D3）
