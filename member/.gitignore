@@ -4,6 +4,9 @@ dist-ssr
 *.local
 .wrangler
 
+# 本機開發用的憑證。絕對不可進版控。
+.dev.vars
+
 # Logs
 logs
 *.log

@@ -134,12 +134,24 @@ PUT    /api/admin/content            編輯文案
 > 等 Phase 6 的 Access 上線後再把憑證放進去。這條規則在 Phase 6 完成前不要拿掉。
 
 ### Phase 1 — 讀取與文字編輯（風險最低，先有用再說）
-- [ ] `GET /api/admin/collections`
-- [ ] 後台列出所有相簿與照片（縮圖牆）
-- [ ] `PATCH /api/admin/collections/:id` + 表單（名稱 / 日期 / occasion / person_name）
-- [ ] `PATCH /api/admin/photos/:id` + 逐張編輯 alt
-- [ ] 標籤 CRUD（`GET`/`POST`/`DELETE /api/admin/tags`）與相簿／照片的標籤掛載
-- **驗收**：改完在公開站看得到（注意 §6 陷阱二的快取）。全程不碰 R2、無不可逆操作。
+- [x] `GET /api/admin/collections`
+- [x] 後台列出所有相簿與照片（含 alt 未填數量提示）
+- [x] `PATCH /api/admin/collections/:id` + 表單（名稱 / 日期 / occasion / person_name / 標籤 / 封面）
+- [x] `PATCH /api/admin/photos/:id` + 逐張編輯 alt
+- [x] 標籤 CRUD（`GET`/`POST`/`DELETE /api/admin/tags`）
+- [x] **認證改成 `/api/admin/*` 中介層**，新端點預設就被保護，不會有人漏加
+- **驗收**：✅ API 27/27 測試通過；瀏覽器實測改 alt 後資料落到 D1 並反映到公開 API。
+
+> **憑證流向（Phase 6 之後也維持這個形狀）：**
+> 瀏覽器 → member Worker（在這裡補上 `Authorization: Bearer`）→ PageWorker。
+> **瀏覽器端永遠不持有憑證**，`member/src/api/admin.js` 裡不該出現任何 token 相關的程式碼。
+> Access 負責「誰能進來」，Worker 持有憑證負責「能做什麼」，兩者分工。
+>
+> 沒設定 `ADMIN_TOKEN` 時代理回 503 並附說明，畫面上顯示「管理功能在此環境停用」——
+> 裸奔期的部署版本就是這個狀態，是預期行為不是故障。
+>
+> 本機開發：複製 `.dev.vars.example` 為 `.dev.vars`（已 gitignore）。
+> **改 `.dev.vars` 後 `wrangler dev` 不會熱重載，必須重啟**，否則會測到舊的值。
 
 ### Phase 2 — 排序與封面
 - [ ] `POST /api/admin/photos/reorder`（批次更新 `order_index`）

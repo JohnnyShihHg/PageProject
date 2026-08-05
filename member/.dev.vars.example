@@ -1,0 +1,12 @@
+# 複製成 .dev.vars 並填入真實值。.dev.vars 已在 .gitignore，不可提交。
+#
+# 這些只給本機 `wrangler dev` 用。部署版本在 Cloudflare Access 上線前
+# **刻意不設定 ADMIN_TOKEN**，所以線上後台的管理功能會回 503 並顯示說明。
+
+# 與 PageWorker `wrangler secret put ADMIN_TOKEN` 設定的值相同。
+# 也就是 G:\SharpProject\.env 裡的 WORKER_ADMIN_TOKEN。
+ADMIN_TOKEN=
+
+# 要打的 PageWorker 位址。留空則用正式站。
+# 若要連本機的 PageWorker（npx wrangler dev --port 8791），填 http://127.0.0.1:8791
+PAGEWORKER_URL=
