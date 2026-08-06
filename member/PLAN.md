@@ -13,6 +13,12 @@
 **進度**：Phase 0～6 全部完成（都在 2026-08-06）。**後台已正式上線且受 Cloudflare Access 保護。**
 建置計畫本身**已經全部做完**，沒有待辦的 Phase 了。
 
+**➡️ 下一個工作項目不在這份文件裡**：2026-08-07 起改做公開站的響應式／CSS 調整，
+計畫寫在 **`frontend/PLAN.md`**。
+
+**2026-08-07：`dev` 已合併進 `master`**（fast-forward，16 個 commit），
+兩個分支都保留。合併後正式站的 About 頁才真正接上 D1 文案。
+
 **後台現在是真的可以用了**：`https://member.pageworker.workers.dev`
 登入方式為 Cloudflare Access（Policy 只允許 `johnny.shih1997@gmail.com`），
 `ADMIN_TOKEN` 已放進部署版本，讀寫功能全部正常。
@@ -20,11 +26,10 @@
 **部署狀態**：Phase 1～6 的後端與後台前端全部已部署到正式環境。
 `ADMIN_TOKEN` 已用 `wrangler secret put` 放進 member 的部署版本，管理功能全面可用。
 
-**唯一刻意沒上正式站的東西：公開站的 About 頁（`frontend/AboutView.vue`）。**
-它改成了 runtime 抓 `/api/content`，但**只在 dev 預覽站生效**——2026-08-06 Johnny 決定
-不把 `dev` merge 進 `master`，因為那會連帶把整個 member 後台原始碼帶進 `master` 分支。
-正式站的 About 頁目前還是完全寫死的舊版本（不是 fallback 生效中，是根本還沒接上 API）。
-文案 API 本身（`GET /api/content`）已經上線可用，只差前端沒部署。
+**公開站的 About 頁已於 2026-08-07 合併 master 後上線**，改成 runtime 抓 `/api/content`。
+已實測確認：正式站真的發出 `/api/content` 請求並回 200，不是在用 fallback
+（畫面文字與 fallback 一模一樣是因為種子資料照抄寫死的內容，這是刻意的，
+不能用「文字有沒有變」來判斷有沒有接上 API，要看有沒有發出那個請求）。
 
 **目前線上的東西**
 
@@ -36,7 +41,7 @@
 | **後台** | `member.pageworker.workers.dev` | **✅ 全功能可用，受 Cloudflare Access 保護**（只有 `johnny.shih1997@gmail.com` 進得去） |
 
 **分支狀態**
-- `PageProject`：`dev` 領先 `master`（member 的全部內容）。**尚未合併 master** —— 2026-08-06 Johnny 決定維持現狀，代價是公開站 About 頁的改動只在 dev 預覽站生效。
+- `PageProject`：**2026-08-07 已把 `dev` 合併進 `master`**（fast-forward，16 個 commit），兩個分支保留、內容相同。member 後台原始碼現在也在 `master` 上了（Access 已上線，原本延後合併的理由消失）。常態開發仍走 `dev`。
 - `PageWorker`：`master` 已 push 且已部署（含 R2 binding）。
 - `SharpProject`：`master` 已是最新。
 
