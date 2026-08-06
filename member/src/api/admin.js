@@ -54,6 +54,38 @@ export const updatePhoto = (photoId, patch) =>
 export const reorderPhotos = (collectionId, photoIds) =>
   request('/api/admin/photos/reorder', { method: 'POST', body: { collectionId, photoIds } })
 
+/**
+ * 上傳一批已在瀏覽器壓好的照片。
+ *
+ * 用 multipart 而不是 JSON + base64：base64 會讓傳輸量膨脹約 33%，
+ * 而且要先把整批圖讀成字串塞進記憶體。
+ *
+ * @param {object} meta { category, collection: {...}, photos: [{ filename, width, height, alt, tags }] }
+ * @param {Array<{main: Blob, thumb: Blob}>} files 順序必須與 meta.photos 一致
+ */
+export async function uploadPhotos(meta, files) {
+  const form = new FormData()
+  form.append('meta', JSON.stringify(meta))
+  files.forEach((f, i) => {
+    form.append(`main_${i}`, f.main, meta.photos[i].filename)
+    form.append(`thumb_${i}`, f.thumb, `thumb_${meta.photos[i].filename}`)
+  })
+
+  // 不要自己設 Content-Type：boundary 必須由瀏覽器產生
+  const res = await fetch('/api/admin/upload', { method: 'POST', body: form })
+  const text = await res.text()
+  let data = null
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new ApiError(`伺服器回應非預期格式（HTTP ${res.status}）`, res.status)
+    }
+  }
+  if (!res.ok) throw new ApiError(data?.error ?? `上傳失敗（HTTP ${res.status}）`, res.status)
+  return data
+}
+
 export const listTags = () => request('/api/admin/tags')
 
 export const createTag = (name) => request('/api/admin/tags', { method: 'POST', body: { name } })

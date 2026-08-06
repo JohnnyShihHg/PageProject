@@ -10,10 +10,15 @@
 
 ## 交接狀態（接手前先讀這段）
 
-**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅（2026-08-06）、Phase 3~6 未開始。下一步是 Phase 3（上傳，最大一塊）。
+**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅（都在 2026-08-06）、Phase 4~6 未開始。
+下一步是 Phase 4（站台文案）。
 
 `POST /api/admin/photos/reorder` 已於 2026-08-06 部署到正式 API（version `906124f3`，
 前一版 `7639d861` 是退路）。正式站的後台仍然沒有 `ADMIN_TOKEN`，所以瀏覽器那條路徑照舊回 503。
+
+**⚠️ Phase 3 尚未部署。** `POST /api/admin/upload` 與 R2 binding 只存在本機。
+部署前先讀 Phase 3 那三段備註 —— 尤其「正式環境第一次先傳 1 張」與
+「不要為了試用把 token 放進線上 member」。
 
 **目前線上的東西**
 
@@ -227,12 +232,35 @@ PUT    /api/admin/content            編輯文案
 > 之後若做 Phase 3 的上傳排序，沿用同一組互動。
 
 ### Phase 3 — 上傳（最大一塊）
-- [ ] 把 PageWorker 的 ingest 驗證／寫入邏輯抽成共用函式（CLI 與網頁共用，見 D3）
-- [ ] `POST /api/admin/upload`：收主圖 + 縮圖 → R2 binding 寫入 → 呼叫共用 ingest
-- [ ] 瀏覽器端：選檔 → 讀 EXIF 拍攝日 → Canvas 壓 WebP（2000px / 800px, q80）→ 預覽 + 顯示壓縮後大小 → 確認才送
-- [ ] 表單涵蓋 CLI 的所有欄位：分類 / 名稱 / slug / occasion / 日期 / 標籤 / alt
+- [x] 把 PageWorker 的 ingest 驗證／寫入邏輯抽成共用函式（CLI 與網頁共用，見 D3）
+- [x] `POST /api/admin/upload`：收主圖 + 縮圖 → R2 binding 寫入 → 呼叫共用 ingest
+- [x] 瀏覽器端：選檔 → 讀 EXIF 拍攝日 → Canvas 壓 WebP（2000px / 800px, q80）→ 預覽 + 顯示壓縮後大小 → 確認才送
+- [x] 表單涵蓋 CLI 的所有欄位：分類 / 名稱 / slug / occasion / 日期 / 標籤 / alt
 - [ ] **先用 1 張實測**再開放整批（compress.js 首次正式環境實跑的教訓）
-- **驗收**：網頁上傳的結果與 CLI 上傳的結果在 D1 / R2 中結構完全一致。
+      → 本機已用 2 張實測；**正式環境的第一次仍然要照這條走**，見下方部署備註。
+- **驗收**：✅ API 14/14；瀏覽器實測 2 張 1.1 MB JPEG → 186 KB 主圖 + 60 KB 縮圖（省 84%，
+  與 D3 的基準相符）；D1 逐欄與 CLI 寫入的資料比對一致（欄位、型別、URL 編碼規則、`thumb_` 前綴）。
+
+> **寫入順序是刻意的，不要調換**（`upload.ts`）：
+> `查撞名 → 查 R2 是否已有同名物件 → 寫 R2 → 寫 D1`，且 **ingest 失敗要把剛寫的 R2 物件刪掉**。
+> 反過來（先寫 R2 再驗）的話，撞名時 R2 上既有的圖檔已經被覆蓋，回幾號錯誤都救不回來 ——
+> 那正是 §6 陷阱一。回收路徑正常流程碰不到，是用故障注入實測過的。
+>
+> 另外多擋一種狀況：**R2 有、D1 沒有**（前一次失敗的殘留）。這時候能不能覆蓋沒人知道，
+> 所以不猜，直接回 409 要人去看。
+
+> **R2 binding 是新的權限面。** `wrangler.jsonc` 多了 `r2_buckets`（`my-page-photo`）與
+> `R2_PUBLIC_URL_BASE`。那個 URL **必須與 `SharpProject/.env` 的 `R2_PUBLIC_URL_BASE` 一字不差**，
+> 兩邊分岔的話同一個 bucket 會產生兩種 url 寫進 D1，公開站上就會有一部分照片連到不存在的網址。
+
+> **網頁上傳在正式環境還不能用，要等 Phase 6。** 線上 member 沒有 `ADMIN_TOKEN`（Phase 0 的規則），
+> 所以瀏覽器那條路徑會回 503。PageWorker 端的 `/api/admin/upload` 部署後就存在，但只有拿得到
+> token 的人（CLI）打得到。**這是刻意的，不要為了試用而把 token 放進線上 member。**
+
+> **測試多媒體上傳時不要用 Git Bash 的 `curl -F` 送含中文的欄位。**
+> Git Bash 會把命令列參數轉成 CP950 才交給原生的 `curl.exe`，中文在進 curl 之前就壞了，
+> 存進 D1 會變成 `%EF%BF%BD`（U+FFFD）。看起來像編碼 bug，其實是測試工具的問題。
+> 用 Node 的 `fetch` + `FormData` 送才是瀏覽器的真實行為。
 
 ### Phase 4 — 站台文案
 - [ ] 新增 D1 表存文案（key-value 或 page-section 皆可）
