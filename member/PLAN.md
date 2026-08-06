@@ -4,14 +4,14 @@
 > **決策理由比決策本身重要** —— 沒有理由的決定，下一個人只會照著改掉。
 > 每完成一項就更新「進度」欄位，不要另外開新檔案記錄。
 
-最後更新：2026-08-06（Phase 2、3 完成 + 上傳頁下拉選單）
+最後更新：2026-08-06（Phase 6 完成，全部 Phase 結束）
 
 ---
 
 ## 交接狀態（接手前先讀這段）
 
 **進度**：Phase 0～6 全部完成（都在 2026-08-06）。**後台已正式上線且受 Cloudflare Access 保護。**
-唯一剩下的項目是 Phase 6 的「從公開站放一個進入後台的入口」，尚未做。
+建置計畫本身**已經全部做完**，沒有待辦的 Phase 了。
 
 **後台現在是真的可以用了**：`https://member.pageworker.workers.dev`
 登入方式為 Cloudflare Access（Policy 只允許 `johnny.shih1997@gmail.com`），
@@ -332,7 +332,8 @@ PUT    /api/admin/content            編輯文案
       Session Duration 24 小時。Team domain 為 `mypagephoto.cloudflareaccess.com`。
 - [x] Worker 端驗 `Cf-Access-Jwt-Assertion`（驗簽章、`aud`、`exp`；**不要對登入方式做假設**，見 D2）
 - [x] 把 `ADMIN_TOKEN` 放進部署版本（`wrangler secret put ADMIN_TOKEN`，2026-08-06）
-- [ ] 從公開站放一個進入後台的入口
+- ~~從公開站放一個進入後台的入口~~ → **2026-08-06 Johnny 決定不做**，直接輸入
+      `member.pageworker.workers.dev` 網址即可，不需要在公開站放連結。**Phase 6 到此全部結束。**
 - **驗收**：✅ 未登入者被 Access 擋在門外（curl 沒帶憑證回 302 導向登入頁）；
       ✅ Johnny 本人登入後實測相簿／標籤／上傳／文案各頁都正常讀得到資料。
 
