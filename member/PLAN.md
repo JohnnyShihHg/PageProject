@@ -10,8 +10,13 @@
 
 ## 交接狀態（接手前先讀這段）
 
-**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅（都在 2026-08-06）、Phase 4~6 未開始。
-下一步是 Phase 4（站台文案）。
+**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅、Phase 4 ✅（都在 2026-08-06）、Phase 5~6 未開始。
+下一步是 Phase 5（刪除）。
+
+**⚠️ Phase 4 尚未推送也尚未部署**（`PageWorker` 的 migration/程式碼、`frontend` 的 AboutView 改動、
+`member` 的文案編輯畫面都只在本機）。上線需要三件事都做：`d1 migrations apply --remote`、
+`wrangler deploy` 兩個 Worker、還有 `frontend` 要重新 build+deploy（它不是 Worker，走 Git 整合自動部署，
+push 到對應分支就會觸發，見 §5 部署表）。
 
 **⚠️ `PageProject` `dev` 領先 origin 1 個 commit（`30e437b` 上傳頁下拉選單），還沒 push。**
 其餘都已 push：`PageProject dev` 到 `c3286c7`、`PageWorker master` 到 `a1b8991`。
@@ -21,6 +26,9 @@
 - `POST /api/admin/upload` + R2 binding（Phase 3）：✅ 已部署到正式 API，同一個 version `a27412e4`。
 - member 後台前端（Phase 1~3 全部畫面）：✅ 已部署，version `68b9d0a9`。
 - **上傳頁下拉選單（`30e437b`）尚未部署** —— 只存在本機 `wrangler dev`，正式站看到的上傳頁還是沒有下拉選單的版本。
+- **Phase 4（站台文案）整個都尚未部署**：migration `0004` 只跑過 `--local`、`content.ts`/`admin.ts`/`index.ts`
+  的改動只在本機、`frontend` 的 `AboutView.vue` 改動也還沒 build+deploy。正式站的 About 頁目前還是
+  完全寫死的舊版本（不是 fallback 生效中，是根本還沒接上 API）。
 
 正式站的後台仍然沒有 `ADMIN_TOKEN`（Phase 0 的規則），所以瀏覽器打管理 API 一律回 503。
 CLI（拿得到 token）打得到所有端點，含新的 upload。
@@ -282,11 +290,27 @@ PUT    /api/admin/content            編輯文案
 > 用 Node 的 `fetch` + `FormData` 送才是瀏覽器的真實行為。
 
 ### Phase 4 — 站台文案
-- [ ] 新增 D1 表存文案（key-value 或 page-section 皆可）
-- [ ] `GET /api/content`（公開）、`PUT /api/admin/content`
-- [ ] `AboutView.vue` 改 runtime 抓，**保留現有文字當 fallback**（D4）
-- [ ] 後台文案編輯畫面
-- **驗收**：把 API 打掛，About 頁仍顯示 fallback 文字而非空白。
+- [x] 新增 D1 表存文案（key-value，見下方說明）
+- [x] `GET /api/content`（公開）、`PUT /api/admin/content`（另加 `GET /api/admin/content` 給後台讀）
+- [x] `AboutView.vue` 改 runtime 抓，**保留現有文字當 fallback**（D4）
+- [x] 後台文案編輯畫面
+- **驗收**：✅ 用 CDP 攔截 `/api/content` 讓請求直接失敗（`ConnectionRefused`），
+  About 頁仍顯示完整的 fallback 文字，不是空白。API 端也驗過：讀取、更新、
+  空字串／未知欄位／空 patch 三種不合法輸入全部擋下。
+
+> **key-value 而不是 page-section**：現在只有 About 一頁、五個固定欄位，
+> key-value 讓後台直接列成一份表單就好，不必為「頁面/區塊」設計巢狀結構。
+> 之後文案頁面變多時，key 可以用 `{page}.{field}` 的命名空間分開，不需要改 schema
+> ——現在的 key 已經是這樣命名（`about.name`、`about.intro`...）。
+>
+> **key 是白名單制**（`content.ts` 的 `CONTENT_KEYS`），不接受任意 key。
+> 這不是通用 CMS，接受任意 key 只會讓後台打得出前端完全不認得的欄位。
+>
+> **不提供「清空成空字串」**：About 頁沒有「正常空白」這個狀態，空字串顯示出來
+> 比顯示 fallback 舊文字更糟，所以 `PUT` 直接拒絕空字串，要改內容就填新內容。
+>
+> 種子資料（migration `0004`）**照抄** `AboutView.vue` 原本寫死的文字，上線當下
+> 前後端顯示完全一致，不會有「切到 D1 之後文字突然變了」的觀感。
 
 ### Phase 5 — 刪除（功能面最後）
 - [ ] `DELETE /api/admin/photos/:id`、`DELETE /api/admin/collections/:id`
@@ -327,6 +351,11 @@ R2 的物件名稱就是 `{filename}`，**沒有 collection 前綴**（`compress
 `GET /api/albums` 是 `public, max-age=60, s-maxage=300, stale-while-revalidate=3600`。
 2026-08-05 一天內因此誤判三次（「CORS 沒生效」「整頁空白」「6 張只顯示 2 張」），三次都不是 bug。
 用 `?cb=<亂數>` 繞過快取確認資料，再重載頁面確認畫面。**做完管理功能後這個坑會更常遇到，因為改資料的頻率變高了。**
+
+**2026-08-06 追加**：`GET /api/content` 用了同一套 `Cache-Control`，這次連瀏覽器都會中招 ——
+不是只有 curl 那種手動繞快取的情境。實測過：在後台改了 About 文案，公開站重新整理**看到的還是舊文字**，
+因為瀏覽器自己的 HTTP 快取遵守 `max-age=60`，同一分鐘內同一個 URL 不會真的發出請求。
+用 CDP 的 `Network.setCacheDisabled` 才驗到新值。**這不是 bug**，只是驗證時容易誤判成「文案沒存到」。
 
 **陷阱三：新的 Worker 網址記得加進 `ALLOWED_ORIGINS`。**
 在 `PageWorker/wrangler.jsonc` 的 `vars`，改完要 `wrangler deploy` 才生效。

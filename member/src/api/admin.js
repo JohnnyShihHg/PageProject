@@ -86,6 +86,13 @@ export async function uploadPhotos(meta, files) {
   return data
 }
 
+/** 回傳 { [key]: value }，例如 content['about.name'] */
+export const getContent = () => request('/api/admin/content').then((d) => d.content)
+
+/** patch 是 { [key]: value }，只需要送有改動的欄位 */
+export const updateContent = (patch) =>
+  request('/api/admin/content', { method: 'PUT', body: patch }).then((d) => d.content)
+
 export const listTags = () => request('/api/admin/tags')
 
 export const createTag = (name) => request('/api/admin/tags', { method: 'POST', body: { name } })
