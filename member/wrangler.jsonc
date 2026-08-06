@@ -3,6 +3,18 @@
   "name": "member",
   "compatibility_date": "2026-08-02",
   "main": "./worker/index.js",
+  // Cloudflare Access 的設定值（見 worker/access.js）。兩個都不是機密 ——
+  // AUD 單獨存在時無法拿來繞過任何驗證，team domain 本來就會出現在登入導向網址上，
+  // 所以直接寫在這裡進版控就好，不用當 secret 處理。
+  //
+  // 留空時 access.js 會直接跳過驗證，維持 Phase 6 之前的行為（沒有這層保護）。
+  // 填法：
+  //   ACCESS_TEAM_DOMAIN = Zero Trust 設定的 team domain，例如 "xxx.cloudflareaccess.com"
+  //   ACCESS_AUD         = Access → Applications → 該 Application → Overview 頁的 Audience (AUD) Tag
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

@@ -11,7 +11,11 @@
 ## 交接狀態（接手前先讀這段）
 
 **進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅、Phase 4 ✅、Phase 5 ✅（都在 2026-08-06）、
-Phase 6 未開始，是最後一塊。
+Phase 6 進行中（Worker 端驗證程式碼已完成，等 Johnny 的 Dashboard 設定值）。
+
+**⚠️ Phase 6 的程式碼尚未推送也尚未部署**，只在本機。且**部署它本身沒有風險**——
+`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` 是空字串時驗證會跳過，行為跟現在部署版本一樣。
+真正要小心的是**之後**放 `ADMIN_TOKEN` 的時機，見上面 Phase 6 段落的部署順序。
 
 Phase 4 的 API／migration 已推送並部署到正式環境（PageWorker version `2877f8c2`、
 member version `7f8ed731`；D1 migration `0004` 已跑 `--remote`）。**但公開站的 About 頁
@@ -338,10 +342,31 @@ PUT    /api/admin/content            編輯文案
 
 ### Phase 6 — 認證（Johnny 指定排在最後）
 - [ ] Cloudflare Access 設定（**Johnny 在 Dashboard 操作，我無法代勞**）：建立 Zero Trust 組織、加 Email OTP、把 member Worker 網址設為 Access 應用
-- [ ] Worker 端驗 `Cf-Access-Jwt-Assertion`（驗簽章、`aud`、`exp`；**不要對登入方式做假設**，見 D2）
+- [x] Worker 端驗 `Cf-Access-Jwt-Assertion`（驗簽章、`aud`、`exp`；**不要對登入方式做假設**，見 D2）
+      —— **程式碼已寫好並本機測完，等 Johnny 給兩個值才能真的啟用**，見下方。
 - [ ] 把 `ADMIN_TOKEN` 等憑證放進部署版本（在此之前刻意不放，見 Phase 0 的警告）
 - [ ] 從公開站放一個進入後台的入口
-- **驗收**：未登入者被擋在 Access；登入後所有功能正常。
+- **驗收**：未登入者被擋在 Access；登入後所有功能正常
+      **（後半段我做不到——OTP 登入需要 Johnny 本人收信操作，只能他測完回報）**。
+
+> **2026-08-06 進度**：`member/worker/access.js` 已寫好 JWT 驗證（用 `jose`，驗簽章／`aud`／
+> `iss`／`exp`），`worker/index.js` 已接上，`wrangler.jsonc` 也加了 `ACCESS_TEAM_DOMAIN` /
+> `ACCESS_AUD` 兩個空字串佔位。**這兩個值目前是空的，驗證會直接跳過**（維持 Phase 6 之前
+> 「沒有這層保護」的現狀），等 Johnny 完成 Dashboard 設定給這兩個值才會真的生效。
+> 兩個都不是機密，可以直接貼在對話裡，不用當 secret 處理（AUD 單獨存在無法拿來繞過驗證，
+> team domain 本來就會出現在登入導向網址上）。
+>
+> 用自己產生的測試金鑰＋假 JWT 驗過 7 種情況（正常通過、缺 JWT、aud 不對、iss 不對、過期、
+> 簽章被竄改、Access 未設定時跳過），全部符合預期。也用 `wrangler dev` 塞一組假的
+> team domain / aud 做過整合測試，確認 `/api/*` 與 SPA 路由（例如 `/albums`）真的會被擋 403；
+> 復原成空字串後行為完全恢復成跳過驗證。
+>
+> **有個既有限制順便記下來**：`/`（首頁）是實體檔案 `index.html`，由 Cloudflare 的資產層
+> 直接送出、**不會經過這支 Worker**，所以 Worker 端的 JWT 檢查對它無效——這不是這次漏接，
+> `worker/index.js` 原本處理 `X-Robots-Tag` 時就已經寫過這個限制。實際上沒有安全疑慮：
+> 真正擋人的是 Access Application 本身（掛在整個網域前面，連資產層都會被攔下來）；
+> Worker 端這層只是防禦縱深，而且就算被繞過，`/` 送出的也只是不含任何機密的 SPA 外殼
+> （瀏覽器端本來就不持有 `ADMIN_TOKEN`）。真正危險的 `/api/*` 完全在保護範圍內。
 
 ---
 
