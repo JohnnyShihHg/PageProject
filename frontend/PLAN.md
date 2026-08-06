@@ -5,17 +5,19 @@
 >
 > 適用範圍：公開站 `frontend/`。管理後台的建置計畫在 `member/PLAN.md`（已全部完成）。
 
-最後更新：2026-08-07（建立，尚未動工）
+最後更新：2026-08-07（7 項 task 全部確認完畢，尚未開始寫程式碼）
 
 ---
 
 ## 交接狀態
 
-**進度**：尚未動工。這是 member 後台（Phase 0～6）全部完成後的下一個工作項目，
-由 Johnny 於 2026-08-07 指定：「調整 CSS，目前部分頁面手機點開來有奇怪的跑版，
-例如 header 他會因為擠壓消失」。
+**進度**：**設計討論已全部確認完畢，尚未動手寫任何程式碼**。這是 member 後台
+（Phase 0～6）全部完成後的下一個工作項目，範圍比單純 CSS 更大——過程中發現
+一項需要動 DB schema、跨三個 repo（PageWorker／compress.js／member）的資料模型
+調整（見 T3+T6）。
 
-**動工前先讀 §2 的實測數據** —— 問題已經定位到具體檔案與行為，不需要重新摸索。
+**開始動工前，直接跳到 §5「確認完畢的 Task List」**，那裡已經是可執行的規格，
+不需要重新討論。§1 的實測數據是輔助佐證，不是待辦本身。
 
 ---
 
@@ -107,3 +109,100 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
   詳見 `member/PLAN.md` 的 D4。
 - **照片 alt 目前是佔位值**（同一相簿內每張都是相簿名稱），
   真正的逐張描述要 Johnny 自己寫，是內容決策不是技術問題。
+
+---
+
+## 5. 確認完畢的 Task List（2026-08-07，Johnny 已逐項確認，可直接動工）
+
+範圍比標題「CSS 調整」大：T3+T6 與 T7 動到 PageWorker 的 schema／API，
+以及 SharpProject 的 `compress.js`。**不是只改 `frontend/` 這個資料夾。**
+
+### T1 — Header 手機版改漢堡選單
+`Navbar.vue` 補漢堡按鈕，≤768px 顯示；展開用 overlay，不要撐開 header
+（`--header-height` 機制見 §1 問題一的說明，展開時不能讓它跟著變高再把內容往下推）。
+
+### T2 — 首頁四格卡（`.contact-nav`）手機版改直向排列
+現在是 `grid-template-columns: repeat(2, 198px)` 固定像素，手機下溢出（見 §1 問題二）。
+改成小螢幕 `flex-direction: column`，卡片滿寬、高度自動。
+
+### T3 + T6 — 拿掉照片級 tag，統一成相簿級（**跨三個 repo，動到 schema**）
+
+**決策**：照片本身的 `tags` 完全不用了（已確認公開站從沒讀過這個欄位，見 §1 之前的討論記錄），
+全部類別改成跟街拍一樣的模式——tag 只掛在**相簿**上，不掛在照片上。
+
+**2026-08-07 查證過的正式資料**（migration 前務必核對這份清單還一致）：
+
+| 相簿 id | 分類 | 現有照片級 tag（要搬去相簿級） |
+|---|---|---|
+| `act_20260718_test800` | portrait | `["測試"]`（7/7 張一致） |
+| `act_20260704_202607社大成果發表` | event | `["吉他","社大"]`（9/9 張一致） |
+| `act_20260530_歐美only` | portrait | `["COS","cosplayer","歐美","歐美翁"]`（4/4 張一致） |
+| `act_20260713_benz` | event | 已經是空的，不用處理（Johnny 自己用網頁上傳測試時，網頁上傳本來就不寫照片級 tag） |
+
+同一本相簿內每張照片的 tag 都完全相同（`compress.js` 本來就是整批套用同一組，
+不是真的逐張不同），所以搬遷是無損的——不是「選一張當代表」，是「反正都一樣，搬過去就好」。
+
+**要動的地方**：
+- [ ] PageWorker migration：把上面三本相簿的 tag 寫進 `collection_tags`，
+      清空對應的 `photo_tags`，然後 **`DROP TABLE photo_tags`**（Johnny 確認要直接刪表，不留著）
+- [ ] PageWorker `src/admin.ts`：`PATCH /photos/:photoId` 拿掉 `tags` 處理，只留 `alt`
+- [ ] PageWorker `src/ingest.ts`：拿掉照片級 tag 的寫入邏輯（`tagLinkStatements(db, 'photo_tags', ...)` 那段）
+- [ ] PageWorker `src/albums.ts`：公開 API 的 photo 物件拿掉 `tags` 欄位
+- [ ] PageWorker `src/upload.ts`：確認網頁上傳路徑不再送 photo 級 tags（目前本來就是空陣列，順手拿掉欄位）
+- [ ] `SharpProject/compress.js`：現在 `tags: isStreet ? [] : tags` / `tags: isStreet ? tags : []` 這種分岔寫法，
+      改成一律 `collection.tags = tags`，邏輯反而變簡單
+- [ ] `member/src/views/AlbumDetailView.vue`：拿掉每張照片下面顯示 tag 徽章的部分（`<span v-for="t in p.tags">`）
+
+### T4 — 略過
+Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開頁的 `relatedGroups`）
+夠用，**不用調整**，不是無縫捲動的形式。
+
+### T5 — 後台相簿標籤輸入要顯示可用清單
+`member/AlbumDetailView.vue` 的「相簿標籤」欄位目前是純文字 input，看不到目前有哪些標籤。
+改成輸入框下方列出現有標籤（可點選加入），做法比照常見的 tag picker。
+
+### T7 — 刪除確認全部改彈出視窗，並補上批次刪除
+
+**共用元件**：做一個 `ConfirmDialog.vue`（overlay + modal），支援兩種模式：
+- 簡單模式：文字 + 取消／確認兩個按鈕
+- 打字模式：要打出指定文字，Confirm 按鈕才會啟用
+
+**各處的規則**：
+
+| 對象 | 觸發條件 | 確認方式 |
+|---|---|---|
+| 標籤刪除 | `collection_count === 0` | 簡單模式，按一下確認 |
+| 標籤刪除 | `collection_count > 0` | 打字模式，輸入標籤名稱 |
+| 相簿刪除（單一） | 一律 | 打字模式，輸入相簿名稱（沿用現有邏輯，只是從頁面內聯改成彈窗） |
+| 相簿內照片刪除（單一） | 一律 | 簡單模式，按一下確認 |
+| 相簿列表多選刪除（新功能） | 選取 ≥1 本 | 打字模式，輸入固定文字（例如「刪除」），彈窗列出即將刪除的相簿名稱 |
+| 相簿內多選照片刪除（新功能） | 選取 ≥1 張 | 打字模式，輸入固定文字 |
+
+**批次刪除一律走新的交易式端點，不是重複呼叫單筆 API**
+（Johnny 2026-08-07 明確要求：「能一次處理不想分多次打避免產生不必要的問題」）：
+
+- [ ] PageWorker 新增 `POST /api/admin/photos/bulk-delete`，body `{ photoIds: [...] }`，
+      用 `db.batch()` 一個交易處理完，回傳每筆結果與受影響的 `collectionId`
+- [ ] PageWorker 新增 `POST /api/admin/collections/bulk-delete`，body `{ ids: [...] }`，
+      同樣用 `db.batch()`，回傳每本相簿的 `photosDeleted`
+- [ ] `member/src/api/admin.js` 加對應的 client 函式
+- [ ] `member/src/views/AlbumsView.vue` 加多選勾選框 + 「刪除已選取」操作列
+- [ ] `member/src/views/AlbumDetailView.vue` 的照片列表加多選勾選框
+
+**已確認的技術背景**（避免重新查證）：
+- 刪照片與刪相簿的 SQL **不一樣**：刪照片是單筆 `DELETE` + 條件式清 `cover_photo_id`；
+  刪相簿是靠 `ON DELETE CASCADE` 連帶清掉 `photos`／`collection_tags`
+- **刪相簿不會刪到 tag 定義本身**，只會刪關聯表的橋接列——`tags` 表裡的名稱永遠留著，
+  這是 Phase 5 就驗證過的既有行為，T7 沒有要改變它
+
+---
+
+## 6. 執行順序（建議）
+
+1. PageWorker：migration（含刪 `photo_tags` 表）+ 相關 API 改動，本機測完再部署
+2. 正式資料遷移確認（跑 migration 前後都要 diff 一次 §5 那張表）
+3. `compress.js` 改動（獨立 repo，改完可以先不部署，本機跑一次確認邏輯對）
+4. `member` 前端：T5、T7（ConfirmDialog + 批次刪除 UI）
+5. `frontend`（公開站）：T1、T2
+6. 全部本機測完 → 部署 → 正式環境驗證（沿用這個 session 一貫的模式：本機先行，
+   實測過的東西才上正式站，`error 1042` 那次教訓還記得吧）
