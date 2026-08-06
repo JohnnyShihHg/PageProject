@@ -7,13 +7,14 @@
   // AUD 單獨存在時無法拿來繞過任何驗證，team domain 本來就會出現在登入導向網址上，
   // 所以直接寫在這裡進版控就好，不用當 secret 處理。
   //
-  // 留空時 access.js 會直接跳過驗證，維持 Phase 6 之前的行為（沒有這層保護）。
-  // 填法：
-  //   ACCESS_TEAM_DOMAIN = Zero Trust 設定的 team domain，例如 "xxx.cloudflareaccess.com"
-  //   ACCESS_AUD         = Access → Applications → 該 Application → Overview 頁的 Audience (AUD) Tag
+  // 2026-08-06 填入：Johnny 在 Dashboard 建立的 Access Application「my-page-photo」，
+  // Policy 只允許 johnny.shih1997@gmail.com，Session Duration 24 小時。
+  // 已用 curl 驗證邊緣層真的在擋（沒帶憑證回 302 導去登入頁）。
+  // Team domain 後來從自動產生的 flat-sea-f0d2 改成 mypagephoto，AUD 不受影響
+  // （AUD 綁的是 Application 本身，不是 team domain）。
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    "ACCESS_TEAM_DOMAIN": "mypagephoto.cloudflareaccess.com",
+    "ACCESS_AUD": "625d7989eddd5413753b052a049df94a00c16361110ef4bbffb384316310206d"
   },
   "assets": {
     "directory": "./dist",
