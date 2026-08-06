@@ -4,7 +4,7 @@
 > **決策理由比決策本身重要** —— 沒有理由的決定，下一個人只會照著改掉。
 > 每完成一項就更新「進度」欄位，不要另外開新檔案記錄。
 
-最後更新：2026-08-05（Phase 0、1 完成後收工）
+最後更新：2026-08-06（Phase 2、3 完成 + 上傳頁下拉選單）
 
 ---
 
@@ -13,12 +13,17 @@
 **進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅（都在 2026-08-06）、Phase 4~6 未開始。
 下一步是 Phase 4（站台文案）。
 
-`POST /api/admin/photos/reorder` 已於 2026-08-06 部署到正式 API（version `906124f3`，
-前一版 `7639d861` 是退路）。正式站的後台仍然沒有 `ADMIN_TOKEN`，所以瀏覽器那條路徑照舊回 503。
+**⚠️ `PageProject` `dev` 領先 origin 1 個 commit（`30e437b` 上傳頁下拉選單），還沒 push。**
+其餘都已 push：`PageProject dev` 到 `c3286c7`、`PageWorker master` 到 `a1b8991`。
 
-**⚠️ Phase 3 尚未部署。** `POST /api/admin/upload` 與 R2 binding 只存在本機。
-部署前先讀 Phase 3 那三段備註 —— 尤其「正式環境第一次先傳 1 張」與
-「不要為了試用把 token 放進線上 member」。
+**部署狀態**
+- `POST /api/admin/photos/reorder`（Phase 2）：✅ 已部署到正式 API，version `a27412e4`（含 R2 binding，見下）。
+- `POST /api/admin/upload` + R2 binding（Phase 3）：✅ 已部署到正式 API，同一個 version `a27412e4`。
+- member 後台前端（Phase 1~3 全部畫面）：✅ 已部署，version `68b9d0a9`。
+- **上傳頁下拉選單（`30e437b`）尚未部署** —— 只存在本機 `wrangler dev`，正式站看到的上傳頁還是沒有下拉選單的版本。
+
+正式站的後台仍然沒有 `ADMIN_TOKEN`（Phase 0 的規則），所以瀏覽器打管理 API 一律回 503。
+CLI（拿得到 token）打得到所有端點，含新的 upload。
 
 **目前線上的東西**
 
@@ -26,12 +31,12 @@
 |---|---|---|
 | 公開站正式 | `pageproject.pageworker.workers.dev` | SEO/OG、hero srcset、soft 404 都已上線 |
 | 公開站預覽 | `dev-pageproject.pageworker.workers.dev` | 同上 |
-| API | `pageworker.pageworker.workers.dev` | 已含全部 admin 端點 |
-| **後台** | `member.pageworker.workers.dev` | **可瀏覽，但管理功能回 503（刻意的，見 Phase 0 警告）** |
+| API | `pageworker.pageworker.workers.dev` | 含全部 admin 端點（含 reorder、upload），R2 binding 已上線 |
+| **後台** | `member.pageworker.workers.dev` | **可瀏覽，但管理功能回 503（刻意的，見 Phase 0 警告）**；上傳頁還沒有下拉選單 |
 
 **分支狀態**
-- `PageProject`：`dev` 領先 `master` 4 個 commit（member 的全部內容）。**尚未合併 master，刻意的** —— 後台還在裸奔，等 Phase 6 的 Access 上線再上正式站。
-- `PageWorker`：`master` 已是最新且已部署。
+- `PageProject`：`dev` 領先 `master`（member 的全部內容）。**尚未合併 master，刻意的** —— 後台還在裸奔，等 Phase 6 的 Access 上線再上正式站。
+- `PageWorker`：`master` 已 push 且已部署（含 R2 binding）。
 - `SharpProject`：`master` 已是最新。
 
 **要在本機開發後台，需要同時跑兩個服務**
@@ -329,6 +334,12 @@ dev 預覽站就是因為漏加，相簿一直顯示「照片準備中」。
 
 **陷阱四：處理完的原始照片要移出 `SharpProject/input/`。**
 已有 `input_done/`（在 .gitignore 內）。唯一索引現在會擋，但擋下來時 R2 已經被重新上傳過了，只是內容相同所以無害。
+
+**陷阱五：本機 `wrangler dev` 上傳測試，圖一定是死的，這是預期行為。**
+本機的 R2 binding 是 miniflare 模擬（存在本機快取），但寫進 D1 的 `url` 用的是**正式**
+R2 的公開網址 `https://pub-...r2.dev/...`。那個物件從來沒有真的傳上正式 R2，網址當然打不開。
+本機測試只能驗證「流程跑不跑得通」（D1 寫對了、撞名擋住了），驗證不了「圖真的能看」——
+這正是 Phase 3 那條「正式環境第一次先傳 1 張」的理由。
 
 ---
 
