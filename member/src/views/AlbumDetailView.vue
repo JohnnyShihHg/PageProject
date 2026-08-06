@@ -133,9 +133,51 @@
                 <div v-if="p.tags.length" class="tags">
                   <span v-for="t in p.tags" :key="t" class="tag">{{ t }}</span>
                 </div>
+                <button
+                  type="button"
+                  class="danger-link"
+                  :disabled="deletingPhoto === p.photoId"
+                  @click="confirmDeletePhoto(p)"
+                >
+                  {{
+                    deletingPhoto === p.photoId
+                      ? '刪除中…'
+                      : deleteArmedId === p.photoId
+                        ? '再按一次以確認刪除'
+                        : '刪除這張照片'
+                  }}
+                </button>
               </div>
             </li>
           </ul>
+        </section>
+
+        <section class="panel danger-zone">
+          <h2>刪除相簿</h2>
+          <p class="hint">
+            會刪掉這本相簿與底下全部 {{ col.photos.length }} 張照片的 D1 資料，
+            公開站會立刻看不到。<strong>R2 上的圖檔不會被刪除</strong>，
+            誤刪的話用原檔名重新上傳即可接回去（見 PLAN.md D5）。這個動作無法在畫面上復原。
+          </p>
+          <label class="confirm-name">
+            <span>
+              請輸入相簿名稱「<code>{{ col.name }}</code>」以啟用刪除
+            </span>
+            <input v-model="deleteConfirmText" type="text" :placeholder="col.name" />
+          </label>
+          <div class="actions">
+            <button
+              type="button"
+              class="danger"
+              :disabled="deleteConfirmText !== col.name || deletingCollection"
+              @click="doDeleteCollection"
+            >
+              {{ deletingCollection ? '刪除中…' : `刪除「${col.name}」與其 ${col.photos.length} 張照片` }}
+            </button>
+            <span v-if="collectionDeleteMsg" :class="['msg', collectionDeleteMsg.ok ? 'ok' : 'bad']">
+              {{ collectionDeleteMsg.text }}
+            </span>
+          </div>
         </section>
       </template>
     </AsyncState>
@@ -144,9 +186,18 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import AsyncState from '../components/AsyncState.vue'
-import { listCollections, updateCollection, updatePhoto, reorderPhotos } from '../api/admin'
+import {
+  listCollections,
+  updateCollection,
+  updatePhoto,
+  reorderPhotos,
+  deletePhoto,
+  deleteCollection,
+} from '../api/admin'
+
+const router = useRouter()
 
 const props = defineProps({
   collectionId: { type: String, required: true },
@@ -321,6 +372,67 @@ async function saveAlt(p) {
     photoMsg[p.photoId] = { ok: false, text: e.message }
   } finally {
     savingPhoto.value = null
+  }
+}
+
+// --- 刪除照片 -------------------------------------------------------------
+// 兩段式確認：第一次點只是「上膛」，按鈕文字變成「再按一次以確認刪除」，
+// 3 秒內沒按第二次就自動解除，避免手滑連點兩下真的刪掉。刻意不用瀏覽器原生
+// confirm()：那個彈窗會擋住整個分頁的其他操作，體驗比行內文字提示差。
+const deleteArmedId = ref(null)
+const deletingPhoto = ref(null)
+let deleteArmTimer = null
+
+function confirmDeletePhoto(p) {
+  if (deleteArmedId.value !== p.photoId) {
+    deleteArmedId.value = p.photoId
+    clearTimeout(deleteArmTimer)
+    deleteArmTimer = setTimeout(() => {
+      if (deleteArmedId.value === p.photoId) deleteArmedId.value = null
+    }, 3000)
+    return
+  }
+  clearTimeout(deleteArmTimer)
+  deleteArmedId.value = null
+  doDeletePhoto(p)
+}
+
+async function doDeletePhoto(p) {
+  deletingPhoto.value = p.photoId
+  try {
+    await deletePhoto(p.photoId)
+    col.value.photos = col.value.photos.filter((x) => x.photoId !== p.photoId)
+    photoOrder.value = photoOrder.value.filter((id) => id !== p.photoId)
+    savedOrder.value = savedOrder.value.filter((id) => id !== p.photoId)
+    delete altDrafts[p.photoId]
+    delete photoMsg[p.photoId]
+    // 若剛好刪到封面，D1 那邊已經把 cover_photo_id 清成 null（見 admin.ts 的說明），
+    // 這裡同步畫面上的欄位，避免之後設定新封面時比對到過期的值。
+    if (col.value.coverPhotoId === p.photoId) col.value.coverPhotoId = null
+  } catch (e) {
+    photoMsg[p.photoId] = { ok: false, text: e.message }
+  } finally {
+    deletingPhoto.value = null
+  }
+}
+
+// --- 刪除相簿 -------------------------------------------------------------
+// 這個動作會連帶刪掉底下所有照片的 D1 資料，是後台唯一「一次動作波及一批東西」
+// 的操作，所以確認方式比刪單張照片更重 ——要求打出完整相簿名稱才能啟用按鈕，
+// 而不是點兩下就好。
+const deleteConfirmText = ref('')
+const deletingCollection = ref(false)
+const collectionDeleteMsg = ref(null)
+
+async function doDeleteCollection() {
+  deletingCollection.value = true
+  collectionDeleteMsg.value = null
+  try {
+    await deleteCollection(col.value.id)
+    router.push('/albums')
+  } catch (e) {
+    collectionDeleteMsg.value = { ok: false, text: e.message }
+    deletingCollection.value = false
   }
 }
 
@@ -546,5 +658,63 @@ button.ghost {
   flex-wrap: wrap;
   gap: 0.3rem;
   margin-top: 0.4rem;
+}
+
+.danger-link {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #c33;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.danger-link:hover:not(:disabled) {
+  color: #a11;
+}
+
+.danger-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.danger-zone {
+  border-color: #c33;
+}
+
+.danger-zone h2 {
+  color: #c33;
+}
+
+.confirm-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  max-width: 420px;
+  margin-bottom: 1rem;
+}
+
+.confirm-name input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+button.danger {
+  border-color: #c33;
+  color: #c33;
+}
+
+button.danger:hover:not(:disabled) {
+  background: #c33;
+  color: #fff;
 }
 </style>

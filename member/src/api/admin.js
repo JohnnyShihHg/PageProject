@@ -50,6 +50,14 @@ export const updateCollection = (id, patch) =>
 export const updatePhoto = (photoId, patch) =>
   request(`/api/admin/photos/${encodeURIComponent(photoId)}`, { method: 'PATCH', body: patch })
 
+/** 只刪 D1，R2 上的檔案保留（誤刪還救得回來，見 PLAN.md D5） */
+export const deletePhoto = (photoId) =>
+  request(`/api/admin/photos/${encodeURIComponent(photoId)}`, { method: 'DELETE' })
+
+/** 刪整本相簿，含裡面所有照片；同樣只動 D1。回傳 photosDeleted 供確認用 */
+export const deleteCollection = (id) =>
+  request(`/api/admin/collections/${encodeURIComponent(id)}`, { method: 'DELETE' })
+
 /** photoIds 的順序就是新順序，必須是該相簿的完整清單（API 會擋不完整的請求） */
 export const reorderPhotos = (collectionId, photoIds) =>
   request('/api/admin/photos/reorder', { method: 'POST', body: { collectionId, photoIds } })

@@ -10,13 +10,16 @@
 
 ## 交接狀態（接手前先讀這段）
 
-**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅、Phase 4 ✅（都在 2026-08-06）、Phase 5~6 未開始。
-下一步是 Phase 5（刪除）。
+**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅、Phase 4 ✅、Phase 5 ✅（都在 2026-08-06）、
+Phase 6 未開始，是最後一塊。
 
-**⚠️ Phase 4 尚未推送也尚未部署**（`PageWorker` 的 migration/程式碼、`frontend` 的 AboutView 改動、
-`member` 的文案編輯畫面都只在本機）。上線需要三件事都做：`d1 migrations apply --remote`、
-`wrangler deploy` 兩個 Worker、還有 `frontend` 要重新 build+deploy（它不是 Worker，走 Git 整合自動部署，
-push 到對應分支就會觸發，見 §5 部署表）。
+Phase 4 的 API／migration 已推送並部署到正式環境（PageWorker version `2877f8c2`、
+member version `7f8ed731`；D1 migration `0004` 已跑 `--remote`）。**但公開站的 About 頁
+（`frontend/AboutView.vue`）刻意維持只在 dev 預覽站生效**——2026-08-06 Johnny 決定不把
+`dev` merge 進 `master`，因為那會連帶把整個 member 後台原始碼帶進 `master` 分支，
+等 Phase 6 的 Access 上線再一次處理。
+
+**⚠️ Phase 5（刪除）尚未推送也尚未部署**，只存在本機 `wrangler dev`。
 
 **⚠️ `PageProject` `dev` 領先 origin 1 個 commit（`30e437b` 上傳頁下拉選單），還沒 push。**
 其餘都已 push：`PageProject dev` 到 `c3286c7`、`PageWorker master` 到 `a1b8991`。
@@ -313,10 +316,25 @@ PUT    /api/admin/content            編輯文案
 > 前後端顯示完全一致，不會有「切到 D1 之後文字突然變了」的觀感。
 
 ### Phase 5 — 刪除（功能面最後）
-- [ ] `DELETE /api/admin/photos/:id`、`DELETE /api/admin/collections/:id`
-- [ ] 二次確認 UI
-- [ ] **預設只刪 D1，R2 檔案保留**（D5）
-- **驗收**：刪除後公開站不再顯示，但 R2 檔案仍在、可還原。
+- [x] `DELETE /api/admin/photos/:id`、`DELETE /api/admin/collections/:id`
+- [x] 二次確認 UI
+- [x] **預設只刪 D1，R2 檔案保留**（D5）
+- **驗收**：✅ 用一張真的存在於本機 R2 的圖檔驗證過刪除照片後 R2 物件原封不動；
+  刪除相簿的 cascade（`photos`／`photo_tags`／`collection_tags`）與 `photosDeleted`
+  回報數字都對過；瀏覽器實測兩段式確認（3 秒自動解除）與打字確認都照設計運作。
+
+> **刪照片若剛好是封面，`cover_photo_id` 會被清成 `null`**，不會留著指向不存在照片的
+> 髒資料。這個欄位沒有 FK 約束（見 migration 0001），刪除不會自動處理，是額外寫的邏輯。
+> 已用一本真的設了封面的街拍相簿實測：刪掉封面照片後 `cover_photo_id` 確實變 `null`。
+>
+> **兩種二次確認的力度不同，故意的**：單張照片是「點兩下、3 秒沒點第二下就自動解除」；
+> 刪整本相簿要求**打出完整相簿名稱**才能啟用按鈕——因為後者會 cascade 掉底下所有照片，
+> 是後台唯一一次動作能波及一批資料的操作，代價比刪單張高一個量級，確認的力度也該不同。
+> 兩者都刻意不用瀏覽器原生 `confirm()`：那個彈窗會擋住整個分頁，體驗比行內提示差。
+>
+> **標籤本身不會因為刪除而連帶清除**：`tags` 表不屬於任何相簿或照片，只有
+> `photo_tags`／`collection_tags` 的關聯列會 cascade。用不到的標籤要用
+> `DELETE /api/admin/tags/:id` 手動清，這是既有行為，Phase 5 沒有改變它。
 
 ### Phase 6 — 認證（Johnny 指定排在最後）
 - [ ] Cloudflare Access 設定（**Johnny 在 Dashboard 操作，我無法代勞**）：建立 Zero Trust 組織、加 Email OTP、把 member Worker 網址設為 Access 應用
