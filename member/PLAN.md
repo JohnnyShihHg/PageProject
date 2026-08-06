@@ -247,8 +247,10 @@ PUT    /api/admin/content            編輯文案
 - [x] `POST /api/admin/upload`：收主圖 + 縮圖 → R2 binding 寫入 → 呼叫共用 ingest
 - [x] 瀏覽器端：選檔 → 讀 EXIF 拍攝日 → Canvas 壓 WebP（2000px / 800px, q80）→ 預覽 + 顯示壓縮後大小 → 確認才送
 - [x] 表單涵蓋 CLI 的所有欄位：分類 / 名稱 / slug / occasion / 日期 / 標籤 / alt
-- [ ] **先用 1 張實測**再開放整批（compress.js 首次正式環境實跑的教訓）
-      → 本機已用 2 張實測；**正式環境的第一次仍然要照這條走**，見下方部署備註。
+- [x] **先用 1 張實測**再開放整批（compress.js 首次正式環境實跑的教訓）
+      → 本機用 2 張實測過；**2026-08-07 Johnny 在正式環境親自實測成功**（透過
+      member 後台，走 Service Binding + Access 全流程），確認上傳／編輯／刪除
+      相簿與照片、標籤操作全部正常。
 - **驗收**：✅ API 14/14；瀏覽器實測 2 張 1.1 MB JPEG → 186 KB 主圖 + 60 KB 縮圖（省 84%，
   與 D3 的基準相符）；D1 逐欄與 CLI 寫入的資料比對一致（欄位、型別、URL 編碼規則、`thumb_` 前綴）。
 
