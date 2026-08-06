@@ -5,7 +5,7 @@
 >
 > 適用範圍：公開站 `frontend/`。管理後台的建置計畫在 `member/PLAN.md`（已全部完成）。
 
-最後更新：2026-08-07（7 項 task 全部確認完畢，尚未開始寫程式碼）
+最後更新：2026-08-07（T1、T2 已完成並 push 到 dev；T3/T5/T6/T7 待做，碰 DB 前會先停下確認）
 
 ---
 
@@ -117,13 +117,17 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
 範圍比標題「CSS 調整」大：T3+T6 與 T7 動到 PageWorker 的 schema／API，
 以及 SharpProject 的 `compress.js`。**不是只改 `frontend/` 這個資料夾。**
 
-### T1 — Header 手機版改漢堡選單
+### T1 — Header 手機版改漢堡選單 ✅ 2026-08-07 完成（commit 36eb13c，已 push dev）
 `Navbar.vue` 補漢堡按鈕，≤768px 顯示；展開用 overlay，不要撐開 header
 （`--header-height` 機制見 §1 問題一的說明，展開時不能讓它跟著變高再把內容往下推）。
+本機 headless Chrome + CDP 五種寬度量測驗證過：768px 以下 header 65px（原本 33px 空白）、
+900px 以上正常顯示、點漢堡展開選單後 header 高度不變。
 
-### T2 — 首頁四格卡（`.contact-nav`）手機版改直向排列
+### T2 — 首頁四格卡（`.contact-nav`）手機版改直向排列 ✅ 2026-08-07 完成（同 commit）
 現在是 `grid-template-columns: repeat(2, 198px)` 固定像素，手機下溢出（見 §1 問題二）。
 改成小螢幕 `flex-direction: column`，卡片滿寬、高度自動。
+驗證過 375px 下 `contactNavRight` 從原本 440px（溢出 65px）變成在視窗內，
+`document.documentElement.scrollWidth` 等於視窗寬度。
 
 ### T3 + T6 — 拿掉照片級 tag，統一成相簿級（**跨三個 repo，動到 schema**）
 
