@@ -147,15 +147,33 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
 不是真的逐張不同），所以搬遷是無損的——不是「選一張當代表」，是「反正都一樣，搬過去就好」。
 
 **要動的地方**：
-- [ ] PageWorker migration：把上面三本相簿的 tag 寫進 `collection_tags`，
-      清空對應的 `photo_tags`，然後 **`DROP TABLE photo_tags`**（Johnny 確認要直接刪表，不留著）
-- [ ] PageWorker `src/admin.ts`：`PATCH /photos/:photoId` 拿掉 `tags` 處理，只留 `alt`
-- [ ] PageWorker `src/ingest.ts`：拿掉照片級 tag 的寫入邏輯（`tagLinkStatements(db, 'photo_tags', ...)` 那段）
-- [ ] PageWorker `src/albums.ts`：公開 API 的 photo 物件拿掉 `tags` 欄位
-- [ ] PageWorker `src/upload.ts`：確認網頁上傳路徑不再送 photo 級 tags（目前本來就是空陣列，順手拿掉欄位）
+- [x] PageWorker migration `0005_backfill_collection_tags.sql`：把上面三本相簿的 tag 寫進
+      `collection_tags`。**2026-08-07 已套用到正式環境**，`collection_tags` 9 → 16 筆（+7），
+      內容與上表完全吻合。用 `SELECT DISTINCT` 從現有資料推導、`INSERT OR IGNORE`，可重跑。
+- [ ] **`DROP TABLE photo_tags` —— 唯一還沒做的不可逆步驟，等 Johnny 點頭**。
+      正式環境原始 41 筆已備份在 `PageWorker/backups/photo_tags_backup_20260807.json`。
+      刻意獨立成另一份 migration：現在的程式碼在這張表存在或不存在都能運作，
+      所以刪表可以隨時做，也可以先觀察一陣子。
+- [x] PageWorker `src/admin.ts`：`PATCH /photos/:photoId` 只剩 `alt`；`tagLinkStatements`
+      只服務 `collection_tags`；`GET /tags` 拿掉 `photo_count`
+      （**注意：`member/src/views/TagsView.vue:34` 還在顯示 `t.photo_count`，會變成空白，待修**）
+- [x] PageWorker `src/ingest.ts`：不再寫照片級 tag。舊版 `compress.js` 送上來的 `p.tags`
+      **直接忽略、不報錯** —— 擋下來只會讓還沒更新的 CLI 整批上傳失敗，而那欄位沒有讀取端
+- [x] PageWorker `src/albums.ts`：公開 API 的 photo 物件拿掉 `tags` 欄位
+- [x] PageWorker `src/upload.ts`：網頁上傳路徑拿掉 photo 級 tags 欄位
 - [ ] `SharpProject/compress.js`：現在 `tags: isStreet ? [] : tags` / `tags: isStreet ? tags : []` 這種分岔寫法，
       改成一律 `collection.tags = tags`，邏輯反而變簡單
 - [ ] `member/src/views/AlbumDetailView.vue`：拿掉每張照片下面顯示 tag 徽章的部分（`<span v-for="t in p.tags">`）
+
+> **⚠️ 2026-08-07 發現、PLAN 原本沒寫到的落差**：公開 API 的 `activities` 形狀
+> （portrait／event）**根本沒有 `tags` 欄位**，只有 street 的 `albums` 有（`albums.ts` 的
+> `isAlbums ? {...tags...} : {...}`）。所以回填進去的那 3 本 portrait/event 相簿標籤，
+> 目前只有後台看得到，公開站讀不到。
+>
+> 這**不是退步**（照片級 tag 本來就沒有任何讀取端，公開站一直都看不到），
+> 但如果「統一成相簿級」的目的包含讓 portrait/event 也能用標籤做相關相簿／分組顯示，
+> 就還要在 `albums.ts` 的 activities 分支補上 `tags`，並決定前端要不要顯示。
+> **這是需求決策不是技術問題，先不自作主張。**
 
 ### T4 — 略過
 Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開頁的 `relatedGroups`）
