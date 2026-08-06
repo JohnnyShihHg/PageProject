@@ -36,19 +36,42 @@ async function proxyToApi(request, env, url) {
     )
   }
 
+  // ⚠️ **正式環境一定要走 Service Binding，不能用一般的 fetch()。**
+  //
+  // member.pageworker.workers.dev 與 pageworker.pageworker.workers.dev 在
+  // **同一個 zone**（pageworker.workers.dev）。Cloudflare 禁止 Worker 用全域
+  // fetch() 呼叫同 zone 的另一個 Worker，會直接回 `error code: 1042`：
+  //   「Worker tried to fetch from another Worker on the same zone, which is
+  //     only supported when the global_fetch_strictly_public compatibility flag is used.」
+  // 那個相容性旗標對 workers.dev 子網域無效（只對自訂網域有用），所以正解是
+  // Service Binding —— 不走公開網路、不額外計費、也不依賴任何旗標。
+  //
+  // **這個坑到 Phase 6 才爆出來的原因**：本機開發走 127.0.0.1 不受此限制，
+  // 而正式環境在設定 ADMIN_TOKEN 之前，上面那段就先回 503 了 ——
+  // 「正式 member 打正式 PageWorker」這條路徑從來沒有真的執行過。
+  //
+  // 本機仍走 HTTP：`.dev.vars` 有設 PAGEWORKER_URL 指向 127.0.0.1:8791，
+  // 那條路徑已經驗證可用，不需要為了本機開發去處理 dev registry 的連線問題。
   const base = (env.PAGEWORKER_URL ?? 'https://pageworker.pageworker.workers.dev').replace(/\/$/, '')
   const target = base + url.pathname + url.search
 
-  const headers = new Headers(request.headers)
+  // 刻意只轉發必要的標頭，不整包原封不動轉發：PageWorker 不需要、也不該收到
+  // Johnny 的 Access session（Cf-Access-Jwt-Assertion / CF_Authorization cookie）。
+  // 那是給 member 自己驗證用的，往上游送沒有任何好處。
+  const headers = new Headers()
   headers.set('Authorization', `Bearer ${env.ADMIN_TOKEN}`)
-  // Host 必須讓 fetch 自己決定，沿用原本的會被上游拒絕
-  headers.delete('host')
+  const contentType = request.headers.get('content-type')
+  if (contentType) headers.set('Content-Type', contentType)
 
-  const res = await fetch(target, {
+  const init = {
     method: request.method,
     headers,
     body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
-  })
+  }
+
+  const res = env.PAGEWORKER_URL
+    ? await fetch(target, init)
+    : await env.PAGEWORKER.fetch(new Request(target, init))
 
   const out = new Headers(res.headers)
 

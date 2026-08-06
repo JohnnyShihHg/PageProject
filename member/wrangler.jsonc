@@ -16,6 +16,18 @@
     "ACCESS_TEAM_DOMAIN": "mypagephoto.cloudflareaccess.com",
     "ACCESS_AUD": "625d7989eddd5413753b052a049df94a00c16361110ef4bbffb384316310206d"
   },
+  // Worker 對 Worker 的呼叫必須走 Service Binding，不能用全域 fetch() ——
+  // 兩支 Worker 在同一個 zone，用 fetch() 會被 Cloudflare 擋下回 error 1042。
+  // 詳細原因見 worker/index.js 的 proxyToApi。
+  //
+  // 本機開發不受影響：`.dev.vars` 的 PAGEWORKER_URL 指向 127.0.0.1:8791，
+  // 程式碼在有那個值時走 HTTP，不會用到這個 binding。
+  "services": [
+    {
+      "binding": "PAGEWORKER",
+      "service": "pageworker"
+    }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

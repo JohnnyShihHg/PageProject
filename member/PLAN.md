@@ -10,35 +10,21 @@
 
 ## 交接狀態（接手前先讀這段）
 
-**進度**：Phase 0 ✅、Phase 1 ✅、Phase 2 ✅、Phase 3 ✅、Phase 4 ✅、Phase 5 ✅（都在 2026-08-06）、
-Phase 6 進行中（Worker 端驗證程式碼已完成，等 Johnny 的 Dashboard 設定值）。
+**進度**：Phase 0～6 全部完成（都在 2026-08-06）。**後台已正式上線且受 Cloudflare Access 保護。**
+唯一剩下的項目是 Phase 6 的「從公開站放一個進入後台的入口」，尚未做。
 
-**⚠️ Phase 6 的程式碼尚未推送也尚未部署**，只在本機。且**部署它本身沒有風險**——
-`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` 是空字串時驗證會跳過，行為跟現在部署版本一樣。
-真正要小心的是**之後**放 `ADMIN_TOKEN` 的時機，見上面 Phase 6 段落的部署順序。
+**後台現在是真的可以用了**：`https://member.pageworker.workers.dev`
+登入方式為 Cloudflare Access（Policy 只允許 `johnny.shih1997@gmail.com`），
+`ADMIN_TOKEN` 已放進部署版本，讀寫功能全部正常。
 
-Phase 4 的 API／migration 已推送並部署到正式環境（PageWorker version `2877f8c2`、
-member version `7f8ed731`；D1 migration `0004` 已跑 `--remote`）。**但公開站的 About 頁
-（`frontend/AboutView.vue`）刻意維持只在 dev 預覽站生效**——2026-08-06 Johnny 決定不把
-`dev` merge 進 `master`，因為那會連帶把整個 member 後台原始碼帶進 `master` 分支，
-等 Phase 6 的 Access 上線再一次處理。
+**部署狀態**：Phase 1～6 的後端與後台前端全部已部署到正式環境。
+`ADMIN_TOKEN` 已用 `wrangler secret put` 放進 member 的部署版本，管理功能全面可用。
 
-**⚠️ Phase 5（刪除）尚未推送也尚未部署**，只存在本機 `wrangler dev`。
-
-**⚠️ `PageProject` `dev` 領先 origin 1 個 commit（`30e437b` 上傳頁下拉選單），還沒 push。**
-其餘都已 push：`PageProject dev` 到 `c3286c7`、`PageWorker master` 到 `a1b8991`。
-
-**部署狀態**
-- `POST /api/admin/photos/reorder`（Phase 2）：✅ 已部署到正式 API，version `a27412e4`（含 R2 binding，見下）。
-- `POST /api/admin/upload` + R2 binding（Phase 3）：✅ 已部署到正式 API，同一個 version `a27412e4`。
-- member 後台前端（Phase 1~3 全部畫面）：✅ 已部署，version `68b9d0a9`。
-- **上傳頁下拉選單（`30e437b`）尚未部署** —— 只存在本機 `wrangler dev`，正式站看到的上傳頁還是沒有下拉選單的版本。
-- **Phase 4（站台文案）整個都尚未部署**：migration `0004` 只跑過 `--local`、`content.ts`/`admin.ts`/`index.ts`
-  的改動只在本機、`frontend` 的 `AboutView.vue` 改動也還沒 build+deploy。正式站的 About 頁目前還是
-  完全寫死的舊版本（不是 fallback 生效中，是根本還沒接上 API）。
-
-正式站的後台仍然沒有 `ADMIN_TOKEN`（Phase 0 的規則），所以瀏覽器打管理 API 一律回 503。
-CLI（拿得到 token）打得到所有端點，含新的 upload。
+**唯一刻意沒上正式站的東西：公開站的 About 頁（`frontend/AboutView.vue`）。**
+它改成了 runtime 抓 `/api/content`，但**只在 dev 預覽站生效**——2026-08-06 Johnny 決定
+不把 `dev` merge 進 `master`，因為那會連帶把整個 member 後台原始碼帶進 `master` 分支。
+正式站的 About 頁目前還是完全寫死的舊版本（不是 fallback 生效中，是根本還沒接上 API）。
+文案 API 本身（`GET /api/content`）已經上線可用，只差前端沒部署。
 
 **目前線上的東西**
 
@@ -47,10 +33,10 @@ CLI（拿得到 token）打得到所有端點，含新的 upload。
 | 公開站正式 | `pageproject.pageworker.workers.dev` | SEO/OG、hero srcset、soft 404 都已上線 |
 | 公開站預覽 | `dev-pageproject.pageworker.workers.dev` | 同上 |
 | API | `pageworker.pageworker.workers.dev` | 含全部 admin 端點（含 reorder、upload），R2 binding 已上線 |
-| **後台** | `member.pageworker.workers.dev` | **可瀏覽，但管理功能回 503（刻意的，見 Phase 0 警告）**；上傳頁還沒有下拉選單 |
+| **後台** | `member.pageworker.workers.dev` | **✅ 全功能可用，受 Cloudflare Access 保護**（只有 `johnny.shih1997@gmail.com` 進得去） |
 
 **分支狀態**
-- `PageProject`：`dev` 領先 `master`（member 的全部內容）。**尚未合併 master，刻意的** —— 後台還在裸奔，等 Phase 6 的 Access 上線再上正式站。
+- `PageProject`：`dev` 領先 `master`（member 的全部內容）。**尚未合併 master** —— 2026-08-06 Johnny 決定維持現狀，代價是公開站 About 頁的改動只在 dev 預覽站生效。
 - `PageWorker`：`master` 已 push 且已部署（含 R2 binding）。
 - `SharpProject`：`master` 已是最新。
 
@@ -341,13 +327,24 @@ PUT    /api/admin/content            編輯文案
 > `DELETE /api/admin/tags/:id` 手動清，這是既有行為，Phase 5 沒有改變它。
 
 ### Phase 6 — 認證（Johnny 指定排在最後）
-- [ ] Cloudflare Access 設定（**Johnny 在 Dashboard 操作，我無法代勞**）：建立 Zero Trust 組織、加 Email OTP、把 member Worker 網址設為 Access 應用
+- [x] Cloudflare Access 設定（Johnny 於 2026-08-06 在 Dashboard 完成）：Zero Trust Free 方案、
+      Application「my-page-photo」綁 member Worker、Policy 只允許 `johnny.shih1997@gmail.com`、
+      Session Duration 24 小時。Team domain 為 `mypagephoto.cloudflareaccess.com`。
 - [x] Worker 端驗 `Cf-Access-Jwt-Assertion`（驗簽章、`aud`、`exp`；**不要對登入方式做假設**，見 D2）
-      —— **程式碼已寫好並本機測完，等 Johnny 給兩個值才能真的啟用**，見下方。
-- [ ] 把 `ADMIN_TOKEN` 等憑證放進部署版本（在此之前刻意不放，見 Phase 0 的警告）
+- [x] 把 `ADMIN_TOKEN` 放進部署版本（`wrangler secret put ADMIN_TOKEN`，2026-08-06）
 - [ ] 從公開站放一個進入後台的入口
-- **驗收**：未登入者被擋在 Access；登入後所有功能正常
-      **（後半段我做不到——OTP 登入需要 Johnny 本人收信操作，只能他測完回報）**。
+- **驗收**：✅ 未登入者被 Access 擋在門外（curl 沒帶憑證回 302 導向登入頁）；
+      ✅ Johnny 本人登入後實測相簿／標籤／上傳／文案各頁都正常讀得到資料。
+
+> **Johnny 保留了「Accept all available identity providers」的預設開啟狀態**（2026-08-06 決定）。
+> 意思是這個 Application 會接受這個 Zero Trust 帳號底下**所有**的登入方式，而不是只有
+> One-time PIN。目前帳號裡只有 OTP 與 Cloudflare 帳號登入兩種，所以實務上沒差；
+> 但**之後若加了新的 IdP（例如 Google OAuth），這個 Application 會自動一起接受**，
+> 不會像 D2 原本設想的那樣需要手動加。要改成明確指定就把那個開關關掉。
+>
+> 實測時 Johnny 是用「Sign in with Cloudflare」進去的（因為當下瀏覽器已登入
+> Cloudflare Dashboard，直接沿用了那個 session），不是走 OTP。兩種都會經過同一條
+> Policy 檢查，不影響安全性。
 
 > **2026-08-06 進度**：`member/worker/access.js` 已寫好 JWT 驗證（用 `jose`，驗簽章／`aud`／
 > `iss`／`exp`），`worker/index.js` 已接上，`wrangler.jsonc` 也加了 `ACCESS_TEAM_DOMAIN` /
@@ -406,6 +403,27 @@ dev 預覽站就是因為漏加，相簿一直顯示「照片準備中」。
 
 **陷阱四：處理完的原始照片要移出 `SharpProject/input/`。**
 已有 `input_done/`（在 .gitignore 內）。唯一索引現在會擋，但擋下來時 R2 已經被重新上傳過了，只是內容相同所以無害。
+
+**陷阱六：member 呼叫 PageWorker 必須走 Service Binding，不能用全域 `fetch()`。**
+兩支 Worker 在**同一個 zone**（`pageworker.workers.dev`），Cloudflare 禁止 Worker 用
+全域 `fetch()` 呼叫同 zone 的另一個 Worker，會回 `error code: 1042`：
+> Worker tried to fetch from another Worker on the same zone, which is only supported
+> when the `global_fetch_strictly_public` compatibility flag is used.
+
+那個相容性旗標對 **workers.dev 子網域無效**（只對自訂網域有用），所以正解是
+`wrangler.jsonc` 的 `services` binding（`env.PAGEWORKER.fetch()`）——
+不走公開網路、不額外計費、不依賴旗標。
+
+**為什麼拖到 Phase 6 才爆**：本機開發走 `127.0.0.1:8791` 不受此限制，
+而正式環境在設定 `ADMIN_TOKEN` 之前，`proxyToApi` 一開頭就先回 503 了 ——
+「正式 member 打正式 PageWorker」這條路徑**從來沒有真的執行過**。
+2026-08-06 一放 token 就立刻炸出來。
+
+**症狀會騙人**：瀏覽器看到的是 HTTP 404，但那是 Cloudflare 自己的
+「這個 workers.dev 網址沒有對應 Worker」錯誤頁，不是 PageWorker 回的 404。
+要看到真正的 `error code: 1042` 得去讀回應主體。當時第一個假設（原封不動轉發
+所有標頭導致邊緣誤判）是**錯的**，改精簡標頭沒有解決問題 —— 那個改動本身仍保留，
+因為不該把 Access session 往上游送，但它不是這個 bug 的原因。
 
 **陷阱五：本機 `wrangler dev` 上傳測試，圖一定是死的，這是預期行為。**
 本機的 R2 binding 是 miniflare 模擬（存在本機快取），但寫進 D1 的 `url` 用的是**正式**

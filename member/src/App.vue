@@ -15,14 +15,10 @@
       </nav>
 
       <!--
-        認證刻意排在最後一個 Phase（Johnny 決定）。在 Cloudflare Access 上線之前，
-        這個後台是沒有任何保護的公開網址，所以這裡放一個明顯的提示，
-        避免有人（包括未來的我）誤以為它已經受保護而把寫入憑證放進部署版本。
+        這裡原本有一個「未啟用認證」的警告框，用來在 Cloudflare Access 上線之前
+        提醒不要把寫入憑證放進部署版本。2026-08-06 Phase 6 完成、Access 正式生效後移除 ——
+        留著會變成錯誤資訊，比沒有更糟。
       -->
-      <div class="warn">
-        <strong>未啟用認證</strong>
-        <p>Cloudflare Access 尚未設定，此站台目前無保護。部署版本不應帶任何寫入憑證。</p>
-      </div>
     </aside>
 
     <main class="content">
@@ -90,27 +86,6 @@ import { RouterLink, RouterView } from 'vue-router'
   font-weight: 600;
 }
 
-.warn {
-  margin-top: auto;
-  padding: 0.75rem;
-  border: 1px solid var(--warn-line);
-  border-radius: 6px;
-  background: var(--warn-bg);
-  font-size: 0.78rem;
-  line-height: 1.6;
-}
-
-.warn strong {
-  display: block;
-  margin-bottom: 0.25rem;
-  color: var(--warn-text);
-}
-
-.warn p {
-  margin: 0;
-  color: var(--muted);
-}
-
 .content {
   padding: 2.5rem 3rem;
   min-width: 0;
@@ -129,10 +104,6 @@ import { RouterLink, RouterView } from 'vue-router'
   .nav {
     flex-direction: row;
     flex-wrap: wrap;
-  }
-
-  .warn {
-    margin-top: 0;
   }
 
   .content {
