@@ -402,4 +402,23 @@ html, body {
   transform: scale(1.05);
 }
 
+@media (max-width: 768px) {
+  .contact-body {
+    padding: 1.5rem;
+  }
+
+  .contact-nav {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-thumb {
+    width: 100%;
+    height: auto;
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+}
+
 </style>
