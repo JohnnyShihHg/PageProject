@@ -110,16 +110,22 @@ onMounted(async () => {
   min-height: 70vh;
 }
 
-.related-section {
-  margin-top: 4rem;
-}
+/*
+  間距刻意全部掛在 .related-title 上，不放在 .related-section。
 
+  原本是 .related-section 帶 margin-top: 4rem（64px）、標題只有 margin-bottom: 1rem，
+  所以那 64px 是「標題＋相簿牆」整塊的上緣間距，不是標題自己的 ——
+  結果標題上方 64px、下方只有 16px，看起來像黏在下面的相簿上。
+
+  改成由標題自己持有上下等距的 margin，它就成為視覺上獨立的一列，
+  之後要調整疏密只要動這一個值，不必在兩條規則之間換算。
+*/
 .related-title {
   text-align: center;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;
   color: #333;
-  margin-bottom: 1rem;
+  margin: 3rem 0;
 }
 
 @media (min-width: 1600px) and (max-width: 2200px) {
