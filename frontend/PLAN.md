@@ -456,7 +456,7 @@ Turnstile 官方測試金鑰（本機驗證用，正式環境不要用）：
 3. `PageWorker` 的 `contact_messages` 表多一筆（可用 `wrangler d1 execute
    pageworker-db --remote --command "SELECT * FROM contact_messages ORDER BY id DESC LIMIT 1;"` 查）
 
-### 7.11 執行順序（全部完成，僅剩 §7.10 的人工驗證）
+### 7.11 執行順序（✅ 全部完成，2026-08-07）
 
 1. ~~Johnny 買網域、加進 Cloudflare 帳號~~ ✅（`zhendoku.com`，改用 Telegram
    後不再是嚴格必要的前置條件，但網域還留著）
@@ -464,4 +464,6 @@ Turnstile 官方測試金鑰（本機驗證用，正式環境不要用）：
    速率限制、Turnstile 驗證）~~ ✅
 3. ~~Turnstile：建立 widget、`wrangler secret put TURNSTILE_SECRET_KEY`~~ ✅
 4. ~~`frontend`：`ContactView.vue` 接上真實送出邏輯 + UI 狀態~~ ✅
-5. **待辦**：Johnny 真人測試一次（見 §7.10）
+5. ~~Johnny 真人測試一次~~ ✅ 2026-08-07：真的在瀏覽器送出一次，
+   Telegram 收到通知、D1 `contact_messages` 第一筆真實資料
+   （id 1，subject「照片?」，`notified=1`）。**整條路徑端到端驗證通過。**
