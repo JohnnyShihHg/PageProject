@@ -16,9 +16,16 @@
   padding: 0;
 }
 
+/*
+  ⚠️ 不要加 `height: 100%`。
+  2026-08-07 修過一次：html/body 一旦被固定成視窗高度，加上 overflow-x: hidden
+  會讓 overflow-y 計算成 auto，body 就變成一個「內部捲動的容器」——真正在捲的是
+  body 元素自己，不是視窗。後果是 window.scrollTo() 與 vue-router 的
+  scrollBehavior（兩者都操作視窗/documentElement）完全失效，換頁不會回到頂部。
+  高度交給 #app 的 min-height: 100vh 處理就好，讓文件本身自然捲動。
+*/
 html, body {
   width: 100%;
-  height: 100%;
   font-family: var(--font-sans);
   background-color: #ffffff;
   color: var(--text-light);

@@ -41,7 +41,6 @@ const groups = ref([]);
 const isLoading = ref(true);
 
 onMounted(async () => {
-  window.scrollTo(0, 0);
   try {
     albumsData.value = await loadAlbums();
     // tags 跟 street 的相簿傳一樣的形狀，PhotoWall 才會在兩邊畫出相同的分組標題

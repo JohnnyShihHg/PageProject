@@ -23,13 +23,8 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
-
-onMounted(() => {
-  window.scrollTo(0, 0);
-});
 </script>
 
 <style scoped>

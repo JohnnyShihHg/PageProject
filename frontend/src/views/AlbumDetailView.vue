@@ -71,7 +71,6 @@ const groups = ref([]);
 const isLoading = ref(true);
 
 onMounted(async () => {
-  window.scrollTo(0, 0);
   try {
     albumsData.value = await loadAlbums();
     if (album.value) {

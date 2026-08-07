@@ -41,7 +41,6 @@ const albumsData = ref(null);
 const categoryDisplayName = computed(() => albumsData.value?.categories.street.displayName ?? '');
 
 onMounted(async () => {
-  window.scrollTo(0, 0);
   try {
     albumsData.value = await loadAlbums();
     albums.value = albumsData.value.categories.street.albums.map(album => ({

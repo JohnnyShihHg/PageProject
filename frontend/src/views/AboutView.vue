@@ -40,7 +40,6 @@ const FALLBACK = {
 const content = reactive({ ...FALLBACK });
 
 onMounted(async () => {
-  window.scrollTo(0, 0);
   try {
     const data = await loadContent();
     // 逐欄覆蓋而不是整包取代：就算 API 只回了部分欄位（或多了未知欄位），
