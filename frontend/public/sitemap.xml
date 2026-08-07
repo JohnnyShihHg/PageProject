@@ -5,43 +5,43 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/</loc>
+    <loc>https://zhendoku.com/</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/album</loc>
+    <loc>https://zhendoku.com/album</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/event</loc>
+    <loc>https://zhendoku.com/event</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/event/portrait</loc>
+    <loc>https://zhendoku.com/event/portrait</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/event/activity</loc>
+    <loc>https://zhendoku.com/event/activity</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/about</loc>
+    <loc>https://zhendoku.com/about</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pageproject.pageworker.workers.dev/contact</loc>
+    <loc>https://zhendoku.com/contact</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>

@@ -3,6 +3,15 @@
   "name": "pageproject",
   "compatibility_date": "2026-08-02",
   "main": "./worker/index.js",
+  // 自訂網域。只在 `wrangler deploy`（master → production）生效，dev 分支走
+  // `wrangler versions upload --preview-alias dev` 不會動到路由/網域綁定，
+  // 所以 dev 預覽站不受影響，仍然只能用 dev-pageproject.pageworker.workers.dev 存取。
+  // 不含 www：2026-08-07 是全新網域，還沒有人習慣打 www 進來，也沒有舊連結
+  // 需要相容，先簡單處理，之後真的需要再加 www + 導轉。
+  // 原本的 pageproject.pageworker.workers.dev 不會失效，兩個網址並存。
+  "routes": [
+    { "pattern": "zhendoku.com", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
