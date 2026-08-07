@@ -151,7 +151,6 @@ function renderTurnstile() {
 }
 
 onMounted(async () => {
-  window.scrollTo(0, 0);
   try {
     await loadTurnstileScript();
     renderTurnstile();

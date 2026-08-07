@@ -56,7 +56,6 @@ function buildOption(albumsData, key, to) {
 }
 
 onMounted(async () => {
-  window.scrollTo(0, 0);
   try {
     const albumsData = await loadAlbums();
     options.value = [

@@ -132,18 +132,13 @@ function isPortraitOrientation(photo) {
 }
 </script>
 
-<style>
-/* 全域重置，確保沒有頂部空白 */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-</style>
-
+<!--
+  這裡原本有一段非 scoped 的 `html, body` 全域重置（margin/padding/width/
+  overflow-x 都與 src/style.css 重複），但它多帶了 `height: 100%`，
+  會把 body 變成固定高度的捲動容器，導致換頁不會回到頂部 ——
+  詳細原因見 src/style.css 裡 html/body 那段的說明。
+  這些重置 style.css 已經全部涵蓋，直接移除，不要再加回來。
+-->
 <style scoped>
 .home-container {
   width: 100%;

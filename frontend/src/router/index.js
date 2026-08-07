@@ -44,14 +44,22 @@ routes.push({ path: '/:pathMatch(.*)*', component: NotFoundView })
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  // 換頁的捲動位置一律由這裡決定，**各頁面不要再自己呼叫 window.scrollTo(0, 0)**：
+  // 那樣會在按「上一頁」時搶先把畫面拉回頂部，蓋掉這裡的 savedPosition 還原。
+  //
+  // ⚠️ 這個機制依賴「捲動發生在視窗/documentElement 上」。html/body 一旦被設成
+  // height: 100%，body 會變成內部捲動的容器，這裡回傳的 { top: 0 } 就完全無效
+  // —— 詳見 src/style.css 裡 html/body 那段的說明。
   scrollBehavior(to, from, savedPosition) {
     return new Promise((resolve) => {
       setTimeout(() => {
         if (savedPosition) {
+          // 只有瀏覽器上一頁／下一頁才有值，還原離開時的位置
           resolve(savedPosition);
         } else if (to.hash) {
           resolve({ el: to.hash, behavior: 'smooth' });
         } else {
+          // 一般點連結跳頁：回到頂部
           resolve({ top: 0, left: 0, behavior: 'instant' });
         }
       }, 50); // 50ms 延遲確保 Vue 組件完全掛載
