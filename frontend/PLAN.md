@@ -259,3 +259,37 @@ Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開
 5. `frontend`（公開站）：T1、T2
 6. 全部本機測完 → 部署 → 正式環境驗證（沿用這個 session 一貫的模式：本機先行，
    實測過的東西才上正式站，`error 1042` 那次教訓還記得吧）
+
+---
+
+## 7. 下一個工作項目：Contact 表單送出（2026-08-07 Johnny 指定，尚未開始）
+
+**現況：表單完全沒有接線。** `frontend/src/views/ContactView.vue` 的 `handleSubmit()`
+目前只有一行 `console.log('contact form submit (not wired up yet)', ...)` ——
+使用者按了 Submit 沒有任何事情發生，也沒有任何成功／失敗提示。
+
+已有的欄位（`form` reactive，全部已用 `v-model` 綁好）：
+
+| 欄位 | 必填 | 型別 |
+|---|---|---|
+| `firstName` / `lastName` | ✅ | text |
+| `company` | — | text |
+| `email` | ✅ | email |
+| `subject` | ✅ | text |
+| `message` | ✅ | textarea |
+
+HTML 的 `required` 已經有了，所以瀏覽器原生驗證會擋空值，但**送出之後什麼都沒做**。
+
+**動工前要先跟 Johnny 確認的事（不要自己選）：**
+- 收件方式：寄到 email？寫進 D1 存成待處理清單？還是兩者都要？
+- 如果要寄信，用哪個服務。Cloudflare 有 Email Routing／Email Sending，
+  PageWorker 已經在 Cloudflare 上，走 Worker 送信不需要額外的第三方帳號
+- 要不要防機器人（Turnstile）。公開表單沒有任何防護遲早會收到垃圾訊息
+- 送出後的 UI：成功／失敗訊息、送出中的 disabled 狀態、成功後要不要清空表單
+
+**技術背景（沿用現有架構，不要另闢新路）：**
+- 公開站的 Worker 在 `frontend/worker/index.js`，目前只做路由白名單與靜態資產
+- 真正有寫入權限的是 PageWorker（`G:\PageWorker`），它握有 D1 與 `ADMIN_TOKEN`。
+  公開表單**不能**帶 `ADMIN_TOKEN`（那是後台憑證），需要另外設計一支不需授權
+  但有防濫用機制的端點
+- 新增路由只改 `frontend/src/router/paths.js`（vue-router 與 Worker 共用單一來源）
