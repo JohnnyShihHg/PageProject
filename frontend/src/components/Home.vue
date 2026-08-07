@@ -37,7 +37,7 @@
     <!-- Intro Section -->
     <section class="intro-section">
       <div class="content-wrapper">
-        <p class="intro-text">用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能捕捉最自然的情緒與光影，為你留下有溫度的畫面。</p>
+        <p class="intro-text">用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能為你捕捉最自然的情緒與光影，留下有溫度的畫面。</p>
       </div>
     </section>
 
