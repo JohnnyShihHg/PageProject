@@ -414,13 +414,54 @@ Turnstile 官方測試金鑰（本機驗證用，正式環境不要用）：
   查 D1，之後真的常用再補後台頁面
 - 自動回覆給填表單的訪客（「我們已收到您的訊息」）—— 只做「通知 Johnny」這個方向
 
-### 7.7 執行順序
+### 7.8 Turnstile widget（2026-08-07 已完成）
 
-1. ~~Johnny 買網域、加進 Cloudflare 帳號~~ ✅ 已完成（`zhendoku.com`），
-   但改用 Telegram 之後這步已經不是嚴格必要的前置條件了
-2. ~~PageWorker：新 migration（`contact_messages`）、新端點 `POST /api/contact`
-   （含 D1 寫入、Telegram 通知、速率限制、Turnstile 驗證），本機測完再部署~~ ✅ 已完成
-3. **下一步**：Turnstile —— 跑 `turnstile-spin` 技能建立 widget、
-   `wrangler secret put TURNSTILE_SECRET_KEY`、接前後端驗證
-4. `frontend`：`ContactView.vue` 接上真實送出邏輯 + UI 狀態，本機測完再部署
-5. 正式環境驗證：真的送一次測試訊息，確認 D1 有紀錄、Johnny 的 Telegram 收到通知
+用 `turnstile-spin` 技能建立，過程中兩個環境限制值得記錄：
+
+- **這台機器沒有真的 python3**（只有 Windows Store 的空殼別名，跑了會噴
+  「Python was not found」），`turnstile-spin` 的 `scripts/*.sh` 都依賴
+  python3 做安全的 JSON 解析，因此完全跑不起來。改用 **Node.js**（這台機器
+  有裝）直接呼叫同樣的 Cloudflare API，安全原則不變（token/secret 不印出、
+  驗證過才寫入、用完的 token 提醒使用者去 Dashboard 撤銷）。之後如果要在
+  這台機器上跑其他依賴 python3 的 Cloudflare skill 腳本，會遇到一樣的問題。
+- Widget 名稱 `pageproject-contact`，四個登記網域：
+  `pageproject.pageworker.workers.dev`、`dev-pageproject.pageworker.workers.dev`、
+  `localhost`、`127.0.0.1`
+- **Sitekey**（公開資訊，寫死在 `ContactView.vue`）：`0x4AAAAAAEI6IIi0G4_7qf21`
+- Secret 已用 `wrangler secret put TURNSTILE_SECRET_KEY` 存進 PageWorker
+- 驗證：假 token 被正確拒絕（`{"error":"人機驗證失敗，請重新整理後再試"}`），
+  證實真正的 widget secret 已接上 `siteverify`
+
+### 7.9 前端接線（2026-08-07 已完成，commit `185ba2d`）
+
+`ContactView.vue` 的 `handleSubmit` 改成真的打 `POST /api/contact`；
+新增 `frontend/src/api/contact.js` 沿用 `albums.js` 的 `VITE_API_BASE`
+慣例。Turnstile 用 `render()` 明確渲染（不是 `class="cf-turnstile"` 讓
+`api.js` 自動掃描），因為需要拿到 `widgetId` 才能在送出後 `reset()`——
+**token 是一次性的**，不 reset 的話使用者修正錯誤後按第二次送出，
+`siteverify` 一定會拒絕同一個 token。UI：送出中 disabled＋「Sending…」、
+成功清空表單、失敗顯示後端實際錯誤訊息且不清空。
+
+### 7.10 ⚠️ 還沒驗證的最後一步：真人完整送出一次
+
+**Managed widget 在 headless 自動化環境下不會發出通過的 token**（bot
+偵測正常運作，這是設計上就該發生的事，不是 bug），所以「使用者填表單、
+過 Turnstile、成功寫進 D1、Johnny 的 Telegram 收到通知」這條完整路徑
+**沒有辦法用自動化工具驗證到底**，只驗證到「假 token 被拒絕」這一半。
+
+**需要 Johnny 親自在瀏覽器測一次**：開 dev 預覽站或本機的 `/contact`，
+填表單、真的按送出，確認：
+1. 出現「訊息已送出，謝謝聯絡！」
+2. Telegram 收到通知
+3. `PageWorker` 的 `contact_messages` 表多一筆（可用 `wrangler d1 execute
+   pageworker-db --remote --command "SELECT * FROM contact_messages ORDER BY id DESC LIMIT 1;"` 查）
+
+### 7.11 執行順序（全部完成，僅剩 §7.10 的人工驗證）
+
+1. ~~Johnny 買網域、加進 Cloudflare 帳號~~ ✅（`zhendoku.com`，改用 Telegram
+   後不再是嚴格必要的前置條件，但網域還留著）
+2. ~~PageWorker：migration、`POST /api/contact`（D1 寫入、Telegram 通知、
+   速率限制、Turnstile 驗證）~~ ✅
+3. ~~Turnstile：建立 widget、`wrangler secret put TURNSTILE_SECRET_KEY`~~ ✅
+4. ~~`frontend`：`ContactView.vue` 接上真實送出邏輯 + UI 狀態~~ ✅
+5. **待辦**：Johnny 真人測試一次（見 §7.10）
