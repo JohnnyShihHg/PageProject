@@ -44,9 +44,9 @@
                 type="button"
                 class="danger"
                 :disabled="busy === t.id"
-                @click="remove(t)"
+                @click="tagToDelete = t"
               >
-                {{ confirming === t.id ? '再按一次確認' : '刪除' }}
+                刪除
               </button>
               <span v-if="rowMsg[t.id]" :class="['msg', rowMsg[t.id].ok ? 'ok' : 'bad']">
                 {{ rowMsg[t.id].text }}
@@ -55,6 +55,29 @@
           </tr>
         </tbody>
       </table>
+
+      <!--
+        T7：確認強度依「有沒有在用」而定。沒有任何相簿使用的標籤刪掉幾乎沒有影響，
+        要求打字只是白費工；有在使用的一刪就會讓公開站上那些相簿的標籤消失，
+        所以要打出標籤名稱才放行。
+      -->
+      <ConfirmDialog
+        :open="!!tagToDelete"
+        title="刪除標籤"
+        :confirm-word="tagToDelete?.collection_count > 0 ? tagToDelete.name : ''"
+        :busy="busy === tagToDelete?.id"
+        @cancel="tagToDelete = null"
+        @confirm="doDeleteTag"
+      >
+        <p v-if="tagToDelete?.collection_count > 0">
+          <strong>{{ tagToDelete.name }}</strong> 目前有
+          <strong>{{ tagToDelete.collection_count }}</strong> 本相簿在使用。
+          刪掉之後這些相簿就不再帶有這個標籤，公開站上也會跟著消失。
+        </p>
+        <p v-else>
+          <strong>{{ tagToDelete?.name }}</strong> 目前沒有任何相簿在使用，可以安全刪除。
+        </p>
+      </ConfirmDialog>
     </AsyncState>
   </div>
 </template>
@@ -62,6 +85,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import AsyncState from '../components/AsyncState.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { listTags, createTag, renameTag, deleteTag } from '../api/admin'
 
 const tags = ref([])
@@ -70,7 +94,7 @@ const error = ref(null)
 const drafts = reactive({})
 const rowMsg = reactive({})
 const busy = ref(null)
-const confirming = ref(null)
+const tagToDelete = ref(null)
 const newName = ref('')
 const adding = ref(false)
 const addMsg = ref(null)
@@ -119,25 +143,21 @@ async function rename(t) {
 }
 
 /**
- * 刪除要按兩次。標籤刪掉會連帶移除所有關聯（schema 有 ON DELETE CASCADE），
- * 而且救不回來 —— 單擊就刪太容易誤觸。
+ * 刪除標籤會連帶移除所有關聯（schema 有 ON DELETE CASCADE），而且救不回來。
+ * 確認彈窗的強度由 collection_count 決定，見 template 裡 ConfirmDialog 的說明。
  */
-async function remove(t) {
-  if (confirming.value !== t.id) {
-    confirming.value = t.id
-    setTimeout(() => {
-      if (confirming.value === t.id) confirming.value = null
-    }, 4000)
-    return
-  }
-  confirming.value = null
+async function doDeleteTag() {
+  const t = tagToDelete.value
+  if (!t) return
   busy.value = t.id
   delete rowMsg[t.id]
   try {
     await deleteTag(t.id)
+    tagToDelete.value = null
     await load()
   } catch (e) {
     rowMsg[t.id] = { ok: false, text: e.message }
+    tagToDelete.value = null
   } finally {
     busy.value = null
   }

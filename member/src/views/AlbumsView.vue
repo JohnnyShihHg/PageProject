@@ -6,8 +6,43 @@
     </p>
 
     <AsyncState :loading="loading" :error="error" :on-retry="load">
+      <!-- T7：多選刪除操作列。刪除按鈕只在有勾選時出現，平常不會誤按 -->
+      <div class="select-bar">
+        <label class="select-all">
+          <input
+            type="checkbox"
+            :checked="allSelected"
+            :indeterminate.prop="someSelected && !allSelected"
+            @change="toggleSelectAll"
+          />
+          <span>全選</span>
+        </label>
+        <template v-if="someSelected">
+          <span class="dim">
+            已選取 {{ selectedIds.length }} 本，共 {{ selectedPhotoCount }} 張照片
+          </span>
+          <button type="button" class="danger" @click="bulkDialog = true">刪除已選取</button>
+          <button type="button" class="ghost" @click="selectedIds = []">取消選取</button>
+        </template>
+        <span v-if="bulkMsg" :class="['msg', bulkMsg.ok ? 'ok' : 'bad']">{{ bulkMsg.text }}</span>
+      </div>
+
       <div class="list">
-        <article v-for="col in collections" :key="col.id" class="card">
+        <article
+          v-for="col in collections"
+          :key="col.id"
+          class="card"
+          :class="{ picked: selectedIds.includes(col.id) }"
+        >
+          <div class="pick-col">
+            <input
+              v-model="selectedIds"
+              type="checkbox"
+              :value="col.id"
+              :aria-label="`選取 ${col.name}`"
+            />
+          </div>
+
           <RouterLink :to="`/albums/${encodeURIComponent(col.id)}`" class="thumb">
             <img v-if="cover(col)" :src="cover(col)" :alt="col.name" loading="lazy" />
             <span v-else class="thumb-empty">無照片</span>
@@ -39,6 +74,32 @@
           </div>
         </article>
       </div>
+
+      <!--
+        打字模式，而且要列出即將刪除的相簿名稱與各自的照片數。
+        這是整個後台波及範圍最大的操作 —— 使用者必須看得到自己選了什麼再按下去。
+      -->
+      <ConfirmDialog
+        :open="bulkDialog"
+        title="批次刪除相簿"
+        confirm-word="刪除"
+        :busy="bulkDeleting"
+        :confirm-label="`刪除 ${selectedIds.length} 本`"
+        @cancel="bulkDialog = false"
+        @confirm="doBulkDelete"
+      >
+        <p>
+          將一次刪除以下 <strong>{{ selectedIds.length }}</strong> 本相簿與其中全部
+          <strong>{{ selectedPhotoCount }}</strong> 張照片的 D1 資料（單一交易，不會只刪一半）。
+          <strong>R2 上的圖檔會保留</strong>，用原檔名重新上傳可以接回去。
+          這個動作無法在畫面上復原。
+        </p>
+        <ul>
+          <li v-for="col in selectedCollections" :key="col.id">
+            {{ col.name }}（{{ col.photos.length }} 張）
+          </li>
+        </ul>
+      </ConfirmDialog>
     </AsyncState>
   </div>
 </template>
@@ -47,13 +108,54 @@
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import AsyncState from '../components/AsyncState.vue'
-import { listCollections } from '../api/admin'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { listCollections, bulkDeleteCollections } from '../api/admin'
 
 const collections = ref([])
 const loading = ref(true)
 const error = ref(null)
 
 const totalPhotos = computed(() => collections.value.reduce((n, c) => n + c.photos.length, 0))
+
+// --- T7：多選批次刪除 -----------------------------------------------------
+// 走 bulkDeleteCollections 這支交易式端點，不是迴圈呼叫單筆 deleteCollection
+// （理由見 api/admin.js 的說明）。
+const selectedIds = ref([])
+const bulkDialog = ref(false)
+const bulkDeleting = ref(false)
+const bulkMsg = ref(null)
+
+const selectedCollections = computed(() =>
+  collections.value.filter((c) => selectedIds.value.includes(c.id))
+)
+const selectedPhotoCount = computed(() =>
+  selectedCollections.value.reduce((n, c) => n + c.photos.length, 0)
+)
+const someSelected = computed(() => selectedIds.value.length > 0)
+const allSelected = computed(
+  () => collections.value.length > 0 && selectedIds.value.length === collections.value.length
+)
+
+function toggleSelectAll() {
+  selectedIds.value = allSelected.value ? [] : collections.value.map((c) => c.id)
+}
+
+async function doBulkDelete() {
+  bulkDeleting.value = true
+  bulkMsg.value = null
+  try {
+    const res = await bulkDeleteCollections([...selectedIds.value])
+    selectedIds.value = []
+    bulkDialog.value = false
+    bulkMsg.value = { ok: true, text: `已刪除 ${res.deleted} 本、共 ${res.photosDeleted} 張照片` }
+    await load()
+  } catch (e) {
+    bulkMsg.value = { ok: false, text: e.message }
+    bulkDialog.value = false
+  } finally {
+    bulkDeleting.value = false
+  }
+}
 
 const CATEGORY_LABELS = { portrait: '人像', event: '活動', street: '街拍' }
 const categoryLabel = (key) => CATEGORY_LABELS[key] ?? key
@@ -92,12 +194,73 @@ onMounted(load)
 
 .card {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 1.5rem 160px 1fr;
   gap: 1.25rem;
   padding: 1rem;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+}
+
+/* 選取中的卡片要一眼認得出來，否則捲動時很難確認自己選了哪幾本 */
+.card.picked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pick-col {
+  padding-top: 0.15rem;
+}
+
+.pick-col input {
+  cursor: pointer;
+}
+
+.select-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+
+.select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.select-bar .dim {
+  color: var(--muted);
+}
+
+.select-bar button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.select-bar button.ghost {
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.select-bar button.danger {
+  border-color: #c33;
+  color: #c33;
+}
+
+.select-bar button.danger:hover {
+  background: #c33;
+  color: #fff;
 }
 
 .thumb {
@@ -177,7 +340,13 @@ onMounted(load)
 
 @media (max-width: 640px) {
   .card {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1.5rem 1fr;
+  }
+
+  /* 縮圖與內文疊成一欄，但勾選框仍留在左側自成一欄 */
+  .thumb,
+  .body {
+    grid-column: 2;
   }
 
   .thumb {

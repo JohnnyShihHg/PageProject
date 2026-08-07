@@ -32,9 +32,29 @@
               <span>相簿標籤</span>
               <input v-model="form.tags" type="text" placeholder="用逗號分隔，可留空" />
               <small>
-                依 album-schema 的慣例：街拍的標籤掛在相簿上，人像／活動掛在每張照片上。
-                掛錯位置不會出錯，但公開站上會出現在預期外的地方。
+                2026-08-07 起三個分類一致：標籤一律掛在相簿上，照片沒有自己的標籤。
+                公開站的分組標題會顯示這些標籤。
               </small>
+              <!--
+                T5：純文字輸入看不到「目前站上有哪些標籤」，很容易打出
+                「街拍」與「街拍照」這種同義但不相等的新標籤。列出現有清單讓人用點的，
+                點過的會標成已選取，再點一次移除。
+              -->
+              <div v-if="allTags.length" class="tag-picker">
+                <button
+                  v-for="t in allTags"
+                  :key="t.id"
+                  type="button"
+                  class="tag-chip"
+                  :class="{ on: selectedTags.includes(t.name) }"
+                  @click="toggleTag(t.name)"
+                >
+                  {{ t.name }}
+                  <span class="tag-count">{{ t.collection_count }}</span>
+                </button>
+              </div>
+              <small v-else-if="!tagsLoadError" class="dim">尚未建立任何標籤。</small>
+              <small v-else class="dim">標籤清單載入失敗，仍可直接在上面輸入。</small>
             </label>
 
             <div class="actions">
@@ -67,6 +87,27 @@
             <span v-else-if="orderDirty" class="msg dim">順序已變更，尚未儲存</span>
           </div>
 
+          <!-- T7：多選刪除。有勾選才出現，平常不佔版面也不會誤按 -->
+          <div class="select-bar">
+            <label class="select-all">
+              <input
+                type="checkbox"
+                :checked="allPhotosSelected"
+                :indeterminate.prop="somePhotosSelected && !allPhotosSelected"
+                @change="toggleSelectAllPhotos"
+              />
+              <span>全選</span>
+            </label>
+            <template v-if="somePhotosSelected">
+              <span class="dim">已選取 {{ selectedPhotoIds.length }} 張</span>
+              <button type="button" class="danger" @click="photoBulkDialog = true">刪除已選取</button>
+              <button type="button" class="ghost" @click="selectedPhotoIds = []">取消選取</button>
+            </template>
+            <span v-if="photoBulkMsg" :class="['msg', photoBulkMsg.ok ? 'ok' : 'bad']">
+              {{ photoBulkMsg.text }}
+            </span>
+          </div>
+
           <ul class="photos">
             <li
               v-for="(p, i) in orderedPhotos"
@@ -81,6 +122,13 @@
               @dragend="onDragEnd"
             >
               <div class="order-col">
+                <input
+                  v-model="selectedPhotoIds"
+                  type="checkbox"
+                  class="pick"
+                  :value="p.photoId"
+                  :aria-label="`選取第 ${i + 1} 張`"
+                />
                 <span class="pos">{{ i + 1 }}</span>
                 <button
                   type="button"
@@ -134,15 +182,9 @@
                   type="button"
                   class="danger-link"
                   :disabled="deletingPhoto === p.photoId"
-                  @click="confirmDeletePhoto(p)"
+                  @click="photoToDelete = p"
                 >
-                  {{
-                    deletingPhoto === p.photoId
-                      ? '刪除中…'
-                      : deleteArmedId === p.photoId
-                        ? '再按一次以確認刪除'
-                        : '刪除這張照片'
-                  }}
+                  {{ deletingPhoto === p.photoId ? '刪除中…' : '刪除這張照片' }}
                 </button>
               </div>
             </li>
@@ -156,19 +198,8 @@
             公開站會立刻看不到。<strong>R2 上的圖檔不會被刪除</strong>，
             誤刪的話用原檔名重新上傳即可接回去（見 PLAN.md D5）。這個動作無法在畫面上復原。
           </p>
-          <label class="confirm-name">
-            <span>
-              請輸入相簿名稱「<code>{{ col.name }}</code>」以啟用刪除
-            </span>
-            <input v-model="deleteConfirmText" type="text" :placeholder="col.name" />
-          </label>
           <div class="actions">
-            <button
-              type="button"
-              class="danger"
-              :disabled="deleteConfirmText !== col.name || deletingCollection"
-              @click="doDeleteCollection"
-            >
+            <button type="button" class="danger" :disabled="deletingCollection" @click="collectionDialog = true">
               {{ deletingCollection ? '刪除中…' : `刪除「${col.name}」與其 ${col.photos.length} 張照片` }}
             </button>
             <span v-if="collectionDeleteMsg" :class="['msg', collectionDeleteMsg.ok ? 'ok' : 'bad']">
@@ -176,6 +207,57 @@
             </span>
           </div>
         </section>
+
+        <!-- 單張照片：簡單模式。誤刪一張的代價低，而且 R2 的圖檔還在，重新上傳就能接回去 -->
+        <ConfirmDialog
+          :open="!!photoToDelete"
+          title="刪除這張照片？"
+          :busy="!!deletingPhoto"
+          @cancel="photoToDelete = null"
+          @confirm="doDeletePhoto"
+        >
+          <p>
+            將刪除 <strong>{{ photoToDelete?.filename }}</strong> 的 D1 資料。
+            R2 上的圖檔會保留，用原檔名重新上傳可以接回去。
+          </p>
+        </ConfirmDialog>
+
+        <!-- 批次照片：打字模式。一次刪多張，誤按的代價比單張高得多 -->
+        <ConfirmDialog
+          :open="photoBulkDialog"
+          title="批次刪除照片"
+          confirm-word="刪除"
+          :busy="bulkDeletingPhotos"
+          :confirm-label="`刪除 ${selectedPhotoIds.length} 張`"
+          @cancel="photoBulkDialog = false"
+          @confirm="doBulkDeletePhotos"
+        >
+          <p>
+            將一次刪除以下 <strong>{{ selectedPhotoIds.length }}</strong> 張照片的 D1 資料
+            （單一交易，不會只刪一半）。R2 上的圖檔會保留。
+          </p>
+          <ul>
+            <li v-for="p in selectedPhotos" :key="p.photoId">{{ p.filename }}</li>
+          </ul>
+        </ConfirmDialog>
+
+        <!-- 整本相簿：打字模式，要打出相簿名稱。沿用原本頁面內聯的規則，只是改成彈窗 -->
+        <ConfirmDialog
+          :open="collectionDialog"
+          title="刪除整本相簿"
+          :confirm-word="col.name"
+          :busy="deletingCollection"
+          :confirm-label="`刪除與其 ${col.photos.length} 張照片`"
+          @cancel="collectionDialog = false"
+          @confirm="doDeleteCollection"
+        >
+          <p>
+            會刪掉 <strong>{{ col.name }}</strong> 與底下全部
+            <strong>{{ col.photos.length }}</strong> 張照片的 D1 資料，公開站會立刻看不到。
+            R2 上的圖檔不會被刪除，誤刪的話用原檔名重新上傳即可接回去。
+            這個動作無法在畫面上復原。
+          </p>
+        </ConfirmDialog>
       </template>
     </AsyncState>
   </div>
@@ -185,13 +267,16 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import AsyncState from '../components/AsyncState.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 import {
   listCollections,
+  listTags,
   updateCollection,
   updatePhoto,
   reorderPhotos,
   deletePhoto,
   deleteCollection,
+  bulkDeletePhotos,
 } from '../api/admin'
 
 const router = useRouter()
@@ -213,6 +298,22 @@ const photoMsg = reactive({})
 
 const CATEGORY_LABELS = { portrait: '人像', event: '活動', street: '街拍' }
 const categoryLabel = computed(() => CATEGORY_LABELS[col.value?.category] ?? col.value?.category)
+
+// --- T5：可點選的既有標籤清單 ---------------------------------------------
+// 標籤清單載入失敗不該讓整個編輯頁掛掉 —— 沒有清單還是能手打，
+// 所以這裡的錯誤只記在 tagsLoadError，不丟進頁面層的 error。
+const allTags = ref([])
+const tagsLoadError = ref(false)
+
+// parseTags 定義在下面的儲存區塊，共用同一份解析規則 ——
+// 兩邊各寫一份的話，「點選」與「儲存」對逗號空白的認定遲早會不一致。
+const selectedTags = computed(() => parseTags(form.tags))
+
+function toggleTag(name) {
+  const current = selectedTags.value
+  const next = current.includes(name) ? current.filter((t) => t !== name) : [...current, name]
+  form.tags = next.join(', ')
+}
 
 const isAltDirty = (p) => (altDrafts[p.photoId] ?? '') !== p.alt
 
@@ -373,43 +474,76 @@ async function saveAlt(p) {
 }
 
 // --- 刪除照片 -------------------------------------------------------------
-// 兩段式確認：第一次點只是「上膛」，按鈕文字變成「再按一次以確認刪除」，
-// 3 秒內沒按第二次就自動解除，避免手滑連點兩下真的刪掉。刻意不用瀏覽器原生
-// confirm()：那個彈窗會擋住整個分頁的其他操作，體驗比行內文字提示差。
-const deleteArmedId = ref(null)
+// T7 起改用 ConfirmDialog 取代原本「再按一次以確認」的兩段式按鈕。
+// 兩段式在單張刪除還算堪用，但批次刪除時使用者看不到自己選了什麼就得按下去，
+// 所以統一成彈窗：單張是簡單模式，批次要打字。
 const deletingPhoto = ref(null)
-let deleteArmTimer = null
+const photoToDelete = ref(null)
 
-function confirmDeletePhoto(p) {
-  if (deleteArmedId.value !== p.photoId) {
-    deleteArmedId.value = p.photoId
-    clearTimeout(deleteArmTimer)
-    deleteArmTimer = setTimeout(() => {
-      if (deleteArmedId.value === p.photoId) deleteArmedId.value = null
-    }, 3000)
-    return
-  }
-  clearTimeout(deleteArmTimer)
-  deleteArmedId.value = null
-  doDeletePhoto(p)
+/** 把一張照片從畫面上的各份狀態移除。單張與批次刪除共用，免得漏掉其中一份 */
+function forgetPhoto(photoId) {
+  col.value.photos = col.value.photos.filter((x) => x.photoId !== photoId)
+  photoOrder.value = photoOrder.value.filter((id) => id !== photoId)
+  savedOrder.value = savedOrder.value.filter((id) => id !== photoId)
+  selectedPhotoIds.value = selectedPhotoIds.value.filter((id) => id !== photoId)
+  delete altDrafts[photoId]
+  delete photoMsg[photoId]
+  // 若剛好刪到封面，D1 那邊已經把 cover_photo_id 清成 null（見 admin.ts 的說明），
+  // 這裡同步畫面上的欄位，避免之後設定新封面時比對到過期的值。
+  if (col.value.coverPhotoId === photoId) col.value.coverPhotoId = null
 }
 
-async function doDeletePhoto(p) {
+async function doDeletePhoto() {
+  const p = photoToDelete.value
+  if (!p) return
   deletingPhoto.value = p.photoId
   try {
     await deletePhoto(p.photoId)
-    col.value.photos = col.value.photos.filter((x) => x.photoId !== p.photoId)
-    photoOrder.value = photoOrder.value.filter((id) => id !== p.photoId)
-    savedOrder.value = savedOrder.value.filter((id) => id !== p.photoId)
-    delete altDrafts[p.photoId]
-    delete photoMsg[p.photoId]
-    // 若剛好刪到封面，D1 那邊已經把 cover_photo_id 清成 null（見 admin.ts 的說明），
-    // 這裡同步畫面上的欄位，避免之後設定新封面時比對到過期的值。
-    if (col.value.coverPhotoId === p.photoId) col.value.coverPhotoId = null
+    forgetPhoto(p.photoId)
+    photoToDelete.value = null
   } catch (e) {
     photoMsg[p.photoId] = { ok: false, text: e.message }
+    photoToDelete.value = null
   } finally {
     deletingPhoto.value = null
+  }
+}
+
+// --- 批次刪除照片 ---------------------------------------------------------
+// 走 bulkDeletePhotos 這支交易式端點，不是迴圈呼叫 deletePhoto ——
+// 中途失敗會留下「刪了一半」的狀態，畫面與 D1 對不起來（見 api/admin.js 的說明）。
+const selectedPhotoIds = ref([])
+const photoBulkDialog = ref(false)
+const bulkDeletingPhotos = ref(false)
+const photoBulkMsg = ref(null)
+
+const selectedPhotos = computed(() =>
+  selectedPhotoIds.value.map((id) => photoById.value[id]).filter(Boolean)
+)
+const somePhotosSelected = computed(() => selectedPhotoIds.value.length > 0)
+const allPhotosSelected = computed(
+  () => photoOrder.value.length > 0 && selectedPhotoIds.value.length === photoOrder.value.length
+)
+
+function toggleSelectAllPhotos() {
+  selectedPhotoIds.value = allPhotosSelected.value ? [] : [...photoOrder.value]
+}
+
+async function doBulkDeletePhotos() {
+  bulkDeletingPhotos.value = true
+  photoBulkMsg.value = null
+  try {
+    const ids = [...selectedPhotoIds.value]
+    const res = await bulkDeletePhotos(ids)
+    for (const id of ids) forgetPhoto(id)
+    selectedPhotoIds.value = []
+    photoBulkDialog.value = false
+    photoBulkMsg.value = { ok: true, text: `已刪除 ${res.deleted} 張` }
+  } catch (e) {
+    photoBulkMsg.value = { ok: false, text: e.message }
+    photoBulkDialog.value = false
+  } finally {
+    bulkDeletingPhotos.value = false
   }
 }
 
@@ -417,7 +551,7 @@ async function doDeletePhoto(p) {
 // 這個動作會連帶刪掉底下所有照片的 D1 資料，是後台唯一「一次動作波及一批東西」
 // 的操作，所以確認方式比刪單張照片更重 ——要求打出完整相簿名稱才能啟用按鈕，
 // 而不是點兩下就好。
-const deleteConfirmText = ref('')
+const collectionDialog = ref(false)
 const deletingCollection = ref(false)
 const collectionDeleteMsg = ref(null)
 
@@ -429,11 +563,24 @@ async function doDeleteCollection() {
     router.push('/albums')
   } catch (e) {
     collectionDeleteMsg.value = { ok: false, text: e.message }
+    collectionDialog.value = false
     deletingCollection.value = false
   }
 }
 
-onMounted(load)
+async function loadTags() {
+  try {
+    allTags.value = (await listTags()).tags
+    tagsLoadError.value = false
+  } catch {
+    tagsLoadError.value = true
+  }
+}
+
+onMounted(() => {
+  load()
+  loadTags()
+})
 </script>
 
 <style scoped>
@@ -563,6 +710,89 @@ button.ghost {
   color: var(--muted);
 }
 
+/* T5：可點選的既有標籤 */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.tag-chip:hover {
+  background: var(--surface-hover);
+}
+
+/* 已加入的標籤要一眼看得出來，否則點了沒反應的錯覺很強 */
+.tag-chip.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.tag-count {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* T7：多選操作列 */
+.select-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+
+.select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.select-bar button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.select-bar button.danger {
+  border-color: #c33;
+  color: #c33;
+}
+
+.select-bar button.danger:hover {
+  background: #c33;
+  color: #fff;
+}
+
+.pick {
+  margin: 0 0 0.15rem;
+  cursor: pointer;
+}
+
 .photo {
   display: grid;
   grid-template-columns: 2.25rem 96px 1fr;
@@ -677,25 +907,6 @@ button.ghost {
 
 .danger-zone h2 {
   color: #c33;
-}
-
-.confirm-name {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.85rem;
-  max-width: 420px;
-  margin-bottom: 1rem;
-}
-
-.confirm-name input {
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.9rem;
 }
 
 button.danger {

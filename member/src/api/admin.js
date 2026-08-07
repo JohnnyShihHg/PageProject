@@ -58,6 +58,21 @@ export const deletePhoto = (photoId) =>
 export const deleteCollection = (id) =>
   request(`/api/admin/collections/${encodeURIComponent(id)}`, { method: 'DELETE' })
 
+/**
+ * 批次刪除照片／相簿。
+ *
+ * **刻意走專用端點而不是迴圈呼叫上面的單筆函式**：後端用一個 db.batch() 交易
+ * 處理完，整批一起成功或一起失敗。迴圈打 N 次的話中途失敗會留下「刪了一半」
+ * 的狀態，畫面與資料庫不一致而且沒有地方記錄哪些成功了。
+ *
+ * 任何一個 id 不存在，後端會整批拒絕並回 404 列出缺的，不會靜默略過。
+ */
+export const bulkDeletePhotos = (photoIds) =>
+  request('/api/admin/photos/bulk-delete', { method: 'POST', body: { photoIds } })
+
+export const bulkDeleteCollections = (ids) =>
+  request('/api/admin/collections/bulk-delete', { method: 'POST', body: { ids } })
+
 /** photoIds 的順序就是新順序，必須是該相簿的完整清單（API 會擋不完整的請求） */
 export const reorderPhotos = (collectionId, photoIds) =>
   request('/api/admin/photos/reorder', { method: 'POST', body: { collectionId, photoIds } })
