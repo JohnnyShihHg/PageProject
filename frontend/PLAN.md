@@ -5,19 +5,27 @@
 >
 > 適用範圍：公開站 `frontend/`。管理後台的建置計畫在 `member/PLAN.md`（已全部完成）。
 
-最後更新：2026-08-07（T1、T2 已完成並 push 到 dev；T3/T5/T6/T7 待做，碰 DB 前會先停下確認）
+最後更新：2026-08-07（**七項 task 全部完成**。T4 原本就確認略過。
+唯一還沒做的是把 `dev` 合併到 `master` 發布公開站，以及部署 member 後台。）
 
 ---
 
 ## 交接狀態
 
-**進度**：**設計討論已全部確認完畢，尚未動手寫任何程式碼**。這是 member 後台
-（Phase 0～6）全部完成後的下一個工作項目，範圍比單純 CSS 更大——過程中發現
-一項需要動 DB schema、跨三個 repo（PageWorker／compress.js／member）的資料模型
-調整（見 T3+T6）。
+**進度：七項 task 全部完成（2026-08-07）**，範圍橫跨三個 repo。
+§5 的 Task List 每一項都標了完成狀態與 commit，直接看那裡。
 
-**開始動工前，直接跳到 §5「確認完畢的 Task List」**，那裡已經是可執行的規格，
-不需要重新討論。§1 的實測數據是輔助佐證，不是待辦本身。
+已上線的部分：
+- **PageWorker**（`G:\PageWorker`，手動 `wrangler deploy`）：已部署到正式環境，
+  migration 0005/0006 也已對正式 D1 執行完畢（`photo_tags` 表已刪除）
+- **SharpProject/compress.js**：已 commit，**獨立 repo、沒有部署概念**，下次跑就是新行為
+
+**還沒做的收尾**：
+- `frontend` 的改動都在 `dev` 分支（預覽站已生效），**還沒合併到 `master`**，
+  所以正式公開站目前還是舊版
+- `member` 後台前端**還沒部署**（`npm run deploy`）
+
+> 本機測試起服務的方式與踩過的坑見 §2，**特別是 5173 埠那個**。
 
 ---
 
@@ -171,8 +179,9 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
       **直接忽略、不報錯** —— 擋下來只會讓還沒更新的 CLI 整批上傳失敗，而那欄位沒有讀取端
 - [x] PageWorker `src/albums.ts`：公開 API 的 photo 物件拿掉 `tags` 欄位
 - [x] PageWorker `src/upload.ts`：網頁上傳路徑拿掉 photo 級 tags 欄位
-- [ ] `SharpProject/compress.js`：現在 `tags: isStreet ? [] : tags` / `tags: isStreet ? tags : []` 這種分岔寫法，
-      改成一律 `collection.tags = tags`，邏輯反而變簡單
+- [x] `SharpProject/compress.js`：兩處 `isStreet ? ... : ...` 的 tag 分岔都拿掉，照片不送 tags、
+      `collection.tags` 一律帶 tags（commit `2146963`）。`isStreet` 仍保留給提示文字與 occasion。
+      **注意這是獨立 repo，改動不會隨 PageProject 一起部署。**
 - [x] `member/src/views/AlbumDetailView.vue`：拿掉每張照片下面的 tag 徽章
       （`p.tags` 已不存在，留著會在 `p.tags.length` 直接拋錯），順手清掉孤兒的 `.tags` CSS
 
@@ -191,11 +200,14 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
 Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開頁的 `relatedGroups`）
 夠用，**不用調整**，不是無縫捲動的形式。
 
-### T5 — 後台相簿標籤輸入要顯示可用清單
-`member/AlbumDetailView.vue` 的「相簿標籤」欄位目前是純文字 input，看不到目前有哪些標籤。
-改成輸入框下方列出現有標籤（可點選加入），做法比照常見的 tag picker。
+### T5 — 後台相簿標籤輸入要顯示可用清單 ✅ 2026-08-07 完成（commit `2751d29`）
+`member/AlbumDetailView.vue` 的「相簿標籤」欄位改成輸入框下方列出現有標籤，
+可點選加入／再點移除，已選取的 chip 會標色（不標色的話「點了沒反應」的錯覺很強）。
+共用下方既有的 `parseTags()`，**不要另寫一份解析規則** ——
+兩邊各寫一份的話，「點選」與「儲存」對逗號空白的認定遲早會不一致。
+標籤清單載入失敗只降級成提示文字，不讓整個編輯頁掛掉（沒有清單還是能手打）。
 
-### T7 — 刪除確認全部改彈出視窗，並補上批次刪除
+### T7 — 刪除確認全部改彈出視窗，並補上批次刪除 ✅ 2026-08-07 完成（commit `2751d29` + PageWorker `c43e79d`）
 
 **共用元件**：做一個 `ConfirmDialog.vue`（overlay + modal），支援兩種模式：
 - 簡單模式：文字 + 取消／確認兩個按鈕
@@ -215,13 +227,20 @@ Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開
 **批次刪除一律走新的交易式端點，不是重複呼叫單筆 API**
 （Johnny 2026-08-07 明確要求：「能一次處理不想分多次打避免產生不必要的問題」）：
 
-- [ ] PageWorker 新增 `POST /api/admin/photos/bulk-delete`，body `{ photoIds: [...] }`，
-      用 `db.batch()` 一個交易處理完，回傳每筆結果與受影響的 `collectionId`
-- [ ] PageWorker 新增 `POST /api/admin/collections/bulk-delete`，body `{ ids: [...] }`，
-      同樣用 `db.batch()`，回傳每本相簿的 `photosDeleted`
-- [ ] `member/src/api/admin.js` 加對應的 client 函式
-- [ ] `member/src/views/AlbumsView.vue` 加多選勾選框 + 「刪除已選取」操作列
-- [ ] `member/src/views/AlbumDetailView.vue` 的照片列表加多選勾選框
+- [x] PageWorker `POST /api/admin/photos/bulk-delete`，body `{ photoIds: [...] }`
+- [x] PageWorker `POST /api/admin/collections/bulk-delete`，body `{ ids: [...] }`
+- [x] `member/src/api/admin.js` 的 `bulkDeletePhotos` / `bulkDeleteCollections`
+- [x] `member/src/views/AlbumsView.vue` 多選勾選框 + 「刪除已選取」操作列
+- [x] `member/src/views/AlbumDetailView.vue` 照片列表多選勾選框
+- [x] 共用元件 `member/src/components/ConfirmDialog.vue`
+
+**實作時定下的兩個規則**（都是實測踩出來的，不要改掉）：
+- 彈窗每次開啟都要清空打字框並重新聚焦。不清空的話上次打的字還留著，
+  下次開啟時確認鈕**直接是啟用狀態**，打字確認就完全失去意義了。
+- 「刪除已選取」按鈕只在有勾選時才出現。常駐的話平常佔版面又容易誤按。
+
+兩個 bulk 端點的設計取捨：不存在的 id 一律回 404 並列出缺的（靜默略過會讓
+前端誤以為刪掉了）；id 會先去重（重複送同一個不會讓 deleted 數字灌水）。
 
 **已確認的技術背景**（避免重新查證）：
 - 刪照片與刪相簿的 SQL **不一樣**：刪照片是單筆 `DELETE` + 條件式清 `cover_photo_id`；
