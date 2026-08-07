@@ -3,15 +3,19 @@
   "name": "pageproject",
   "compatibility_date": "2026-08-02",
   "main": "./worker/index.js",
-  // 自訂網域。只在 `wrangler deploy`（master → production）生效，dev 分支走
-  // `wrangler versions upload --preview-alias dev` 不會動到路由/網域綁定，
-  // 所以 dev 預覽站不受影響，仍然只能用 dev-pageproject.pageworker.workers.dev 存取。
-  // 不含 www：2026-08-07 是全新網域，還沒有人習慣打 www 進來，也沒有舊連結
-  // 需要相容，先簡單處理，之後真的需要再加 www + 導轉。
-  // 原本的 pageproject.pageworker.workers.dev 不會失效，兩個網址並存。
+  // 自訂網域。不含 www：2026-08-07 是全新網域，還沒有人習慣打 www 進來，
+  // 也沒有舊連結需要相容，先簡單處理，之後真的需要再加 www + 導轉。
+  //
+  // ⚠️ 2026-08-07 事故記錄：加了 routes 卻沒明確保留 workers_dev，結果
+  // Cloudflare 把 workers.dev 子網域整個關掉了 —— 不只 dev-pageproject
+  // 預覽站掛掉，連正式的 pageproject.pageworker.workers.dev 也一起 404。
+  // Wrangler 的行為是：一旦設定 routes，workers_dev 預設會被關閉，
+  // 除非顯式寫 true。**這裡的 workers_dev: true 不要拿掉**，
+  // 否則同一個事故會重演。
   "routes": [
     { "pattern": "zhendoku.com", "custom_domain": true }
   ],
+  "workers_dev": true,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
