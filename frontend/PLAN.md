@@ -262,7 +262,7 @@ Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開
 
 ---
 
-## 7. 下一個工作項目：Contact 表單送出（2026-08-07 Johnny 指定，尚未開始）
+## 7. 下一個工作項目：Contact 表單送出（2026-08-07 Johnny 指定，規劃完畢待動工）
 
 **現況：表單完全沒有接線。** `frontend/src/views/ContactView.vue` 的 `handleSubmit()`
 目前只有一行 `console.log('contact form submit (not wired up yet)', ...)` ——
@@ -280,16 +280,110 @@ Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開
 
 HTML 的 `required` 已經有了，所以瀏覽器原生驗證會擋空值，但**送出之後什麼都沒做**。
 
-**動工前要先跟 Johnny 確認的事（不要自己選）：**
-- 收件方式：寄到 email？寫進 D1 存成待處理清單？還是兩者都要？
-- 如果要寄信，用哪個服務。Cloudflare 有 Email Routing／Email Sending，
-  PageWorker 已經在 Cloudflare 上，走 Worker 送信不需要額外的第三方帳號
-- 要不要防機器人（Turnstile）。公開表單沒有任何防護遲早會收到垃圾訊息
-- 送出後的 UI：成功／失敗訊息、送出中的 disabled 狀態、成功後要不要清空表單
+### 7.1 Johnny 2026-08-07 已確認的四個決定
 
-**技術背景（沿用現有架構，不要另闢新路）：**
-- 公開站的 Worker 在 `frontend/worker/index.js`，目前只做路由白名單與靜態資產
-- 真正有寫入權限的是 PageWorker（`G:\PageWorker`），它握有 D1 與 `ADMIN_TOKEN`。
-  公開表單**不能**帶 `ADMIN_TOKEN`（那是後台憑證），需要另外設計一支不需授權
-  但有防濫用機制的端點
-- 新增路由只改 `frontend/src/router/paths.js`（vue-router 與 Worker 共用單一來源）
+1. **收件方式：兩者都要** —— 寫進 D1（可查詢、不怕漏信）＋ Email Sending 通知
+2. **寄信服務：Email Sending**（Cloudflare 原生，PageWorker 已在 Cloudflare 上，
+   走 Worker binding 不需要額外的第三方帳號／API key）
+3. **加 Turnstile 防機器人**：可以
+4. **送出後 UI**：可以做（成功／失敗訊息、送出中 disabled、成功後清空表單）
+
+### 7.2 目前卡住的前置條件：寄件網域
+
+Email Sending 要求寄件位址（例如 `noreply@yourdomain.com`）的網域掛在**使用者自己的
+Cloudflare DNS 上**，用來加 SPF／DKIM 記錄證明「這封信真的是這個網域授權寄的」。
+查過三個 repo 的 wrangler 設定，**目前所有服務都跑在 `*.workers.dev` 子網域**
+（`pageproject.pageworker.workers.dev`、`pageworker.pageworker.workers.dev`、
+`member.pageworker.workers.dev`），沒有任何 Johnny 名下的網域 —— `workers.dev`
+是 Cloudflare 自己的網域，不能加使用者的 SPF/DKIM 記錄，沒辦法拿來寄信。
+
+**Johnny 2026-08-07 表示要買一個網域。** 買好、加進 Cloudflare 帳號之後，
+在 Dashboard 執行一次（或請這個 session 用 `npx wrangler email sending enable
+<domain>` 代跑，這行本身不需要人工操作，只是需要網域先存在）：
+
+```
+Compute & AI → Email Service → Email Sending → Onboard Domain
+```
+
+會自動加 SPF（TXT）與 DKIM（CNAME/TXT）記錄，DNS 生效通常 5–15 分鐘。
+**這是唯一還卡在 Johnny 身上的外部依賴**——網域買好、加進 Cloudflare 帳號之後，
+其餘步驟都能在這個 session 內完成，不需要再回 Dashboard 手動點。
+
+Turnstile 不算依賴：有專屬的 `turnstile-spin` 技能會透過 Cloudflare API 自動建立
+widget、接前後端驗證，屆時直接跑，不需要 Johnny 先手動去 Dashboard 建。
+
+### 7.3 資料庫設計（PageWorker，新 migration）
+
+```sql
+CREATE TABLE contact_messages (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  first_name   TEXT NOT NULL,
+  last_name    TEXT NOT NULL,
+  company      TEXT,
+  email        TEXT NOT NULL,
+  subject      TEXT NOT NULL,
+  message      TEXT NOT NULL,
+  email_sent   INTEGER NOT NULL DEFAULT 0,   -- 0/1，Email Sending 是否成功送出
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+```
+
+`email_sent` 這個欄位是為了處理「D1 寫入成功、但 Email Sending 失敗」的情況——
+**不能讓一封信寄失敗就讓使用者以為表單沒送出**。正確順序是：先寫 D1（這步失敗
+才真的要回錯誤給使用者），再嘗試寄信通知，寄信失敗只記錄、不影響已經寫進 D1 的
+這筆資料，Johnny 之後在後台（或直接查 D1）都還看得到。
+
+後台要不要加一個「聯絡訊息」列表頁見 §7.6，不是這次的必要範圍，先讓資料進得去。
+
+### 7.4 API 端點設計（PageWorker，新增，不掛在 `/api/admin/*` 底下）
+
+```
+POST /api/contact
+Content-Type: application/json
+
+{
+  "firstName": "...", "lastName": "...", "company": "...",
+  "email": "...", "subject": "...", "message": "...",
+  "turnstileToken": "..."
+}
+```
+
+**為什麼不能沿用 `/api/admin/*` 的驗證方式**：那一整組端點是靠
+`Authorization: Bearer $ADMIN_TOKEN` 授權，token 只活在 member 的 Worker 裡，
+瀏覽器永遠拿不到。公開表單如果比照這個模式，等於要把管理員權限的憑證交給
+「任何打開網站的人」——攻擊者能用同一把 token 做任何管理員能做的事（不只是
+灌垃圾訊息，是真的能刪光相簿）。**這支端點的權限必須只等於「新增一筆聯絡紀錄」，
+不能借用等於「整個後台」的那把鑰匙。**
+
+防濫用改用另一套機制，不是 Bearer token：
+1. **Turnstile**：前端帶 `turnstileToken`，後端呼叫 Cloudflare 的 siteverify API
+   確認是真人，不是先決定要不要做，是 Johnny 已經確認要做
+2. **速率限制**：同一 IP／同一 email 短時間內只能送幾次（用 D1 查
+   `created_at > datetime('now', '-1 hour')` 的筆數即可，量小不需要額外的 KV
+   或 Durable Object）
+3. **欄位驗證**：沿用 `admin.ts` 現有的 `isNonEmptyString` 之類的檢查，
+   email 格式、各欄位長度上限（防止有人塞一篇小說進 message）
+
+### 7.5 前端改動（`frontend/`）
+
+- `ContactView.vue`：`handleSubmit` 改成真的打 API；送出中 disabled 送出鈕；
+  成功顯示訊息＋清空表單；失敗顯示錯誤訊息，**不清空**（使用者不用重打一次）
+- 嵌入 Turnstile widget（`turnstile-spin` 技能會處理前端片段的插入位置與寫法）
+- API base 沿用 `frontend/src/api/albums.js` 同一個 `VITE_API_BASE` 慣例，
+  不要另開一條命名不同的環境變數
+
+### 7.6 明確排除在這次範圍外（先不做，除非 Johnny 之後要求）
+
+- 後台的「聯絡訊息」列表／已讀未讀管理 UI —— 資料先進 D1，Johnny 要看可以先直接
+  查 D1，之後真的常用再補後台頁面
+- 自動回覆給填表單的訪客（「我們已收到您的訊息」）—— 只做「通知 Johnny」這個方向
+
+### 7.7 執行順序
+
+1. **卡住點**：Johnny 買網域、加進 Cloudflare 帳號
+2. PageWorker：加網域到 Email Sending（`wrangler email sending enable`）、驗證 DNS
+3. PageWorker：新 migration（`contact_messages`）、新端點 `POST /api/contact`
+   （含 D1 寫入、Email Sending 通知、速率限制），本機測完再部署
+4. Turnstile：跑 `turnstile-spin` 技能建立 widget、接前後端驗證
+5. `frontend`：`ContactView.vue` 接上真實送出邏輯 + UI 狀態，本機測完再部署
+6. 正式環境驗證：真的送一次測試訊息，確認 D1 有紀錄、Johnny 收到通知信
