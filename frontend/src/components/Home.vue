@@ -37,7 +37,7 @@
     <!-- Intro Section -->
     <section class="intro-section">
       <div class="content-wrapper">
-        <p class="intro-text">用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能捕捉最自然的情緒與光影，為你留下有溫度的畫面。</p>
+        <p class="intro-text">用鏡頭記錄每一個值得被留下的瞬間，無論是靜謐專注的人像，或是熱鬧真實的活動現場，都希望能為你捕捉最自然的情緒與光影，留下有溫度的畫面。</p>
       </div>
     </section>
 
@@ -47,7 +47,7 @@
         <div class="service-panel">
           <div class="service-text">
             <h3 class="service-link" @click="$router.push('/event/portrait')">人像寫真</h3>
-            <p>捕捉自然神韻與獨特氣質，提供個人形象、生活寫真、閨蜜、情侶與婚紗等人像攝影服務，用鏡頭留下最真實的自己。</p>
+            <p>主要透過自然光進行拍攝，試著把日常的環境和自然的神情融入相片，讓日常的照片帶著一點不日常的氛圍。</p>
           </div>
           <div
             v-if="portraitPhoto"
@@ -66,7 +66,7 @@
         <div class="service-panel">
           <div class="service-text">
             <h3 class="service-link" @click="$router.push('/event/activity')">活動紀錄</h3>
-            <p>忠實記錄現場每一刻精彩瞬間，提供婚禮紀錄、講座論壇、企業活動、展演側錄等專業攝影與剪輯服務，讓回憶完整保存。</p>
+            <p>朋友相聚、發表活動、展演側錄等等，盡量保留環境的氛圍記錄下重要的瞬間，讓活動的細節也能保留在回憶中。</p>
           </div>
           <div
             v-if="eventPhoto"

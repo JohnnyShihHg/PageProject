@@ -84,30 +84,6 @@ code {
   margin-bottom: 2rem;
 }
 
-/* Phase 尚未實作的頁面共用的佔位樣式。
-   刻意做得像「施工中」而不是像壞掉的空白頁 —— 空白頁分不出是沒做還是出錯。 */
-.placeholder {
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  padding: 2rem;
-  background: var(--surface);
-}
-
-.placeholder h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
-}
-
-.placeholder ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  color: var(--muted);
-}
-
-.placeholder li {
-  margin-bottom: 0.3rem;
-}
-
 .tag {
   display: inline-block;
   padding: 0.15rem 0.5rem;
