@@ -262,7 +262,7 @@ Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開
 
 ---
 
-## 7. 下一個工作項目：Contact 表單送出（2026-08-07 Johnny 指定，規劃完畢待動工）
+## 7. Contact 表單送出（2026-08-07 Johnny 指定，後端已完成並部署，前端待動工）
 
 **現況：表單完全沒有接線。** `frontend/src/views/ContactView.vue` 的 `handleSubmit()`
 目前只有一行 `console.log('contact form submit (not wired up yet)', ...)` ——
@@ -282,60 +282,71 @@ HTML 的 `required` 已經有了，所以瀏覽器原生驗證會擋空值，但
 
 ### 7.1 Johnny 2026-08-07 已確認的四個決定
 
-1. **收件方式：兩者都要** —— 寫進 D1（可查詢、不怕漏信）＋ Email Sending 通知
-2. **寄信服務：Email Sending**（Cloudflare 原生，PageWorker 已在 Cloudflare 上，
-   走 Worker binding 不需要額外的第三方帳號／API key）
+1. **收件方式：兩者都要** —— 寫進 D1（可查詢、不怕漏信）＋ 即時通知
+2. **通知方式：~~Email Sending~~ → 改用 Telegram**（見 §7.2，Email Sending 要 $5/月的
+   Workers Paid 方案，Johnny 覺得貴，改走完全免費的 Telegram Bot）
 3. **加 Turnstile 防機器人**：可以
 4. **送出後 UI**：可以做（成功／失敗訊息、送出中 disabled、成功後清空表單）
 
-### 7.2 目前卡住的前置條件：寄件網域
+### 7.2 決策變更：Email Sending 改成 Telegram（2026-08-07）
 
-Email Sending 要求寄件位址（例如 `noreply@yourdomain.com`）的網域掛在**使用者自己的
-Cloudflare DNS 上**，用來加 SPF／DKIM 記錄證明「這封信真的是這個網域授權寄的」。
-查過三個 repo 的 wrangler 設定，**目前所有服務都跑在 `*.workers.dev` 子網域**
-（`pageproject.pageworker.workers.dev`、`pageworker.pageworker.workers.dev`、
-`member.pageworker.workers.dev`），沒有任何 Johnny 名下的網域 —— `workers.dev`
-是 Cloudflare 自己的網域，不能加使用者的 SPF/DKIM 記錄，沒辦法拿來寄信。
+原計畫是 Cloudflare Email Sending，但實測 Dashboard 顯示
+**「Email Sending is currently only available with the Workers Paid plan」**
+——不是「免費額度用完才收費」，是**完全不能用，除非先訂閱 $5/月**。這點
+先前查文件時語意含糊（一處寫「outbound 不可用」、另一處寫「寄到已驗證地址
+免費」），Dashboard 的實際畫面才是最終依據，文件的模糊表述不可信。
 
-**Johnny 2026-08-07 表示要買一個網域。** 買好、加進 Cloudflare 帳號之後，
-在 Dashboard 執行一次（或請這個 session 用 `npx wrangler email sending enable
-<domain>` 代跑，這行本身不需要人工操作，只是需要網域先存在）：
+Johnny 覺得 $5/月不划算（這只是一個低流量的個人聯絡表單，不值得為了通知
+訂閱付費方案），選擇 **Telegram Bot** 取代：完全免費、無用量上限、設定比
+Email Sending 簡單（不需要網域、不需要等 DNS 生效）。
 
-```
-Compute & AI → Email Service → Email Sending → Onboard Domain
-```
+**zhendoku.com 這個網域仍然有效**，只是原本「寄信要用網域」的理由不成立了。
+網域還是掛在 Johnny 的 Cloudflare 帳號裡，之後如果有別的需求（例如真的要
+自訂網域取代 `*.workers.dev`）可以再用。
 
-會自動加 SPF（TXT）與 DKIM（CNAME/TXT）記錄，DNS 生效通常 5–15 分鐘。
-**這是唯一還卡在 Johnny 身上的外部依賴**——網域買好、加進 Cloudflare 帳號之後，
-其餘步驟都能在這個 session 內完成，不需要再回 Dashboard 手動點。
+Telegram 設定（已完成）：
+- Bot：`@JohnnyShih1997ChatBot`（Johnny 之前就建立過，直接沿用，沒有新建）
+- 拿 token：BotFather 對話 `/mybots` → 選 bot → API Token
+- 拿 chat id：bot 要先被使用者 `/start` 過，才能用 `getUpdates` 查到
+  `chat.id`；查的時候發現這個 bot 之前掛了一個指向失效 ngrok 網址的 webhook
+  （`Wrong response from the webhook: 404`），跟這次無關的舊測試殘留，
+  已用 `deleteWebhook` 清掉才能改用 `getUpdates` 拉訊息
+- `wrangler secret put TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` 已對正式
+  PageWorker 執行
 
-Turnstile 不算依賴：有專屬的 `turnstile-spin` 技能會透過 Cloudflare API 自動建立
-widget、接前後端驗證，屆時直接跑，不需要 Johnny 先手動去 Dashboard 建。
+Turnstile 不受影響：有專屬的 `turnstile-spin` 技能會透過 Cloudflare API
+自動建立 widget、接前後端驗證，屆時直接跑，不需要 Johnny 先手動去
+Dashboard 建。**這是目前唯一還沒完成的外部依賴。**
 
-### 7.3 資料庫設計（PageWorker，新 migration）
+### 7.3 資料庫設計（PageWorker，migration 0008，✅ 已對本機與正式 D1 套用）
 
 ```sql
 CREATE TABLE contact_messages (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  first_name   TEXT NOT NULL,
-  last_name    TEXT NOT NULL,
-  company      TEXT,
-  email        TEXT NOT NULL,
-  subject      TEXT NOT NULL,
-  message      TEXT NOT NULL,
-  email_sent   INTEGER NOT NULL DEFAULT 0,   -- 0/1，Email Sending 是否成功送出
-  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  first_name TEXT NOT NULL,
+  last_name  TEXT NOT NULL,
+  company    TEXT,
+  email      TEXT NOT NULL,
+  subject    TEXT NOT NULL,
+  message    TEXT NOT NULL,
+  ip         TEXT,             -- 只用來做速率限制，不對外顯示
+  notified   INTEGER NOT NULL DEFAULT 0,   -- Telegram 通知是否送出成功
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE INDEX idx_contact_messages_ip_created ON contact_messages(ip, created_at);
 ```
 
-`email_sent` 這個欄位是為了處理「D1 寫入成功、但 Email Sending 失敗」的情況——
-**不能讓一封信寄失敗就讓使用者以為表單沒送出**。正確順序是：先寫 D1（這步失敗
-才真的要回錯誤給使用者），再嘗試寄信通知，寄信失敗只記錄、不影響已經寫進 D1 的
-這筆資料，Johnny 之後在後台（或直接查 D1）都還看得到。
+`notified` 欄位處理「D1 寫入成功、但 Telegram 通知失敗」的情況——**不能讓
+通知失敗連帶讓使用者以為表單沒送出**。順序是：先寫 D1（這步失敗才真的要
+回錯誤給使用者），再嘗試推播 Telegram，通知失敗只記錄、不影響已經寫進
+D1 的這筆資料。
 
-後台要不要加一個「聯絡訊息」列表頁見 §7.6，不是這次的必要範圍，先讓資料進得去。
+後台要不要加一個「聯絡訊息」列表頁見 §7.6，不是這次的必要範圍，先讓資料
+進得去；Johnny 拿到 Telegram 通知後，目前的流程是**自己上後台／直接查
+D1** 看完整內容（Telegram 訊息刻意不含表單內容，只提示「有新訊息」，
+見 §7.4）。
 
-### 7.4 API 端點設計（PageWorker，新增，不掛在 `/api/admin/*` 底下）
+### 7.4 API 端點（PageWorker `src/contact.ts` + `src/index.ts`，✅ 已完成並部署）
 
 ```
 POST /api/contact
@@ -356,18 +367,43 @@ Content-Type: application/json
 不能借用等於「整個後台」的那把鑰匙。**
 
 防濫用改用另一套機制，不是 Bearer token：
-1. **Turnstile**：前端帶 `turnstileToken`，後端呼叫 Cloudflare 的 siteverify API
-   確認是真人，不是先決定要不要做，是 Johnny 已經確認要做
-2. **速率限制**：同一 IP／同一 email 短時間內只能送幾次（用 D1 查
-   `created_at > datetime('now', '-1 hour')` 的筆數即可，量小不需要額外的 KV
-   或 Durable Object）
-3. **欄位驗證**：沿用 `admin.ts` 現有的 `isNonEmptyString` 之類的檢查，
-   email 格式、各欄位長度上限（防止有人塞一篇小說進 message）
+1. **Turnstile**：後端呼叫 `https://challenges.cloudflare.com/turnstile/v0/siteverify`
+   驗證是真人，失敗（含網路錯誤）一律視為驗證不通過——防濫用寧可誤擋不能誤放
+2. **速率限制**：同一 IP 一小時內最多 5 筆（`WHERE ip = ? AND created_at >
+   datetime('now', '-1 hour')`，量小不需要額外的 KV 或 Durable Object）
+3. **欄位驗證**：`firstName`/`lastName`/`subject` 上限 100/100/200 字、
+   `message` 上限 5000 字、`company` 上限 100 字、`email` 需符合基本格式
 
-### 7.5 前端改動（`frontend/`）
+**目前狀態：`TURNSTILE_SECRET_KEY` 尚未設定，端點已部署但回 503**
+（沿用 `ADMIN_TOKEN` 「未設定就停用」的慣例），等 turnstile-spin 建好真的
+widget 才會真正對外開放。
 
-- `ContactView.vue`：`handleSubmit` 改成真的打 API；送出中 disabled 送出鈕；
-  成功顯示訊息＋清空表單；失敗顯示錯誤訊息，**不清空**（使用者不用重打一次）
+Telegram 通知訊息格式（`contact.ts` 的 `notifyTelegram`）：只帶訊息 id 與
+subject，**刻意不含完整表單內容**——完整內容已經在 D1，Telegram 訊息裡
+放內容等於把訪客資料多複製一份到 Cloudflare 以外的地方，沒有必要的曝露面。
+
+**本機測試踩過的坑**（如果之後要在本機重現除錯，先看這段避免重踩）：
+用 `pkill -f "wrangler dev"` 殺 wrangler dev **殺不乾淨**——它會啟動多層
+子進程（npx → wrangler cli → workerd），`pkill` 常常只殺到其中一層，
+底下的 workerd 或另一層 wrangler 還活著繼續用**啟動當下**讀進的
+`.dev.vars`。實測現象：改了 `.dev.vars` 裡的 Turnstile 測試金鑰、重啟後
+新請求卻表現得像用著舊金鑰——查了半天才發現是舊進程沒死透。
+正確做法：PowerShell 用 `Get-CimInstance Win32_Process -Filter
+"Name='node.exe'" | Where-Object { $_.CommandLine -match 'wrangler' }`
+（以及 `workerd.exe`）逐一 `Stop-Process -Force`，之後用
+`Get-NetTCPConnection -LocalPort <port> -State Listen` 確認埠真的空了
+再重啟，不要只靠 `pkill` 或短暫 sleep 判斷「應該死了」。
+
+Turnstile 官方測試金鑰（本機驗證用，正式環境不要用）：
+- Sitekey always-pass：`1x00000000000000000000AA`
+- Secret always-pass：`1x0000000000000000000000000000000AA`
+- Secret always-fail：`2x0000000000000000000000000000000AA`
+
+### 7.5 前端改動（`frontend/`，尚未開始）
+
+- `ContactView.vue`：`handleSubmit` 改成真的打 `POST /api/contact`；送出中
+  disabled 送出鈕；成功顯示訊息＋清空表單；失敗顯示錯誤訊息，**不清空**
+  （使用者不用重打一次）
 - 嵌入 Turnstile widget（`turnstile-spin` 技能會處理前端片段的插入位置與寫法）
 - API base 沿用 `frontend/src/api/albums.js` 同一個 `VITE_API_BASE` 慣例，
   不要另開一條命名不同的環境變數
@@ -380,10 +416,11 @@ Content-Type: application/json
 
 ### 7.7 執行順序
 
-1. **卡住點**：Johnny 買網域、加進 Cloudflare 帳號
-2. PageWorker：加網域到 Email Sending（`wrangler email sending enable`）、驗證 DNS
-3. PageWorker：新 migration（`contact_messages`）、新端點 `POST /api/contact`
-   （含 D1 寫入、Email Sending 通知、速率限制），本機測完再部署
-4. Turnstile：跑 `turnstile-spin` 技能建立 widget、接前後端驗證
-5. `frontend`：`ContactView.vue` 接上真實送出邏輯 + UI 狀態，本機測完再部署
-6. 正式環境驗證：真的送一次測試訊息，確認 D1 有紀錄、Johnny 收到通知信
+1. ~~Johnny 買網域、加進 Cloudflare 帳號~~ ✅ 已完成（`zhendoku.com`），
+   但改用 Telegram 之後這步已經不是嚴格必要的前置條件了
+2. ~~PageWorker：新 migration（`contact_messages`）、新端點 `POST /api/contact`
+   （含 D1 寫入、Telegram 通知、速率限制、Turnstile 驗證），本機測完再部署~~ ✅ 已完成
+3. **下一步**：Turnstile —— 跑 `turnstile-spin` 技能建立 widget、
+   `wrangler secret put TURNSTILE_SECRET_KEY`、接前後端驗證
+4. `frontend`：`ContactView.vue` 接上真實送出邏輯 + UI 狀態，本機測完再部署
+5. 正式環境驗證：真的送一次測試訊息，確認 D1 有紀錄、Johnny 的 Telegram 收到通知
