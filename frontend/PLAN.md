@@ -85,6 +85,16 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
 `Runtime.evaluate` 讀 `getComputedStyle` 與 `getBoundingClientRect` 取得實際數值。
 **不要靠肉眼看截圖判斷有沒有溢出**，量出來的數字才有辦法比對修改前後。
 
+> **⚠️ 2026-08-07 踩到的坑：先確認 5173 埠上跑的是你剛開的 server。**
+> 那天量到的數字一直對不上正式資料庫（畫面出現只存在於本機 D1 的標籤），
+> 查了很久才發現 **5173 被前一天遺留的 `vite dev` 佔著**，`npm run preview` 默默退到 4173，
+> 所有「驗證」其實都打在那台舊 server 上。更陰險的是 dev server 會 HMR 讀當前原始碼，
+> 所以新功能「看起來有生效」，只有資料是舊的 —— 完全看不出異常。
+>
+> 兩個保命作法：開 preview 一律加 `--strictPort`（埠被佔就直接失敗，不要默默換埠）；
+> 驗證前先 `Get-NetTCPConnection -LocalPort 5173 -State Listen` 看 PID 的 `StartTime`
+> 是不是這次開的。另外注意 **CORS 白名單只有 5173/5174**，跑在 4173 會拿不到資料。
+
 ---
 
 ## 3. 尚未確認的事（Johnny 說「部分頁面」，可能不只上面兩項）
@@ -150,30 +160,32 @@ Chrome 擴充功能常常沒連上，用 headless Chrome + CDP 驅動（Node 內
 - [x] PageWorker migration `0005_backfill_collection_tags.sql`：把上面三本相簿的 tag 寫進
       `collection_tags`。**2026-08-07 已套用到正式環境**，`collection_tags` 9 → 16 筆（+7），
       內容與上表完全吻合。用 `SELECT DISTINCT` 從現有資料推導、`INSERT OR IGNORE`，可重跑。
-- [ ] **`DROP TABLE photo_tags` —— 唯一還沒做的不可逆步驟，等 Johnny 點頭**。
-      正式環境原始 41 筆已備份在 `PageWorker/backups/photo_tags_backup_20260807.json`。
-      刻意獨立成另一份 migration：現在的程式碼在這張表存在或不存在都能運作，
-      所以刪表可以隨時做，也可以先觀察一陣子。
+- [x] migration `0006_drop_photo_tags.sql`：**`DROP TABLE photo_tags` 2026-08-07 已對正式環境執行**
+      （Johnny 當場確認）。刪除前的 41 筆原始資料備份在
+      `PageWorker/backups/photo_tags_backup_20260807.json`。
+      刪表後正式環境剩下 `categories / collections / photos / tags / collection_tags / content`。
 - [x] PageWorker `src/admin.ts`：`PATCH /photos/:photoId` 只剩 `alt`；`tagLinkStatements`
       只服務 `collection_tags`；`GET /tags` 拿掉 `photo_count`
-      （**注意：`member/src/views/TagsView.vue:34` 還在顯示 `t.photo_count`，會變成空白，待修**）
+- [x] `member/src/views/TagsView.vue`：標籤表拿掉「照片」欄（API 已不回 `photo_count`）
 - [x] PageWorker `src/ingest.ts`：不再寫照片級 tag。舊版 `compress.js` 送上來的 `p.tags`
       **直接忽略、不報錯** —— 擋下來只會讓還沒更新的 CLI 整批上傳失敗，而那欄位沒有讀取端
 - [x] PageWorker `src/albums.ts`：公開 API 的 photo 物件拿掉 `tags` 欄位
 - [x] PageWorker `src/upload.ts`：網頁上傳路徑拿掉 photo 級 tags 欄位
 - [ ] `SharpProject/compress.js`：現在 `tags: isStreet ? [] : tags` / `tags: isStreet ? tags : []` 這種分岔寫法，
       改成一律 `collection.tags = tags`，邏輯反而變簡單
-- [ ] `member/src/views/AlbumDetailView.vue`：拿掉每張照片下面顯示 tag 徽章的部分（`<span v-for="t in p.tags">`）
+- [x] `member/src/views/AlbumDetailView.vue`：拿掉每張照片下面的 tag 徽章
+      （`p.tags` 已不存在，留著會在 `p.tags.length` 直接拋錯），順手清掉孤兒的 `.tags` CSS
 
-> **⚠️ 2026-08-07 發現、PLAN 原本沒寫到的落差**：公開 API 的 `activities` 形狀
-> （portrait／event）**根本沒有 `tags` 欄位**，只有 street 的 `albums` 有（`albums.ts` 的
-> `isAlbums ? {...tags...} : {...}`）。所以回填進去的那 3 本 portrait/event 相簿標籤，
-> 目前只有後台看得到，公開站讀不到。
->
-> 這**不是退步**（照片級 tag 本來就沒有任何讀取端，公開站一直都看不到），
-> 但如果「統一成相簿級」的目的包含讓 portrait/event 也能用標籤做相關相簿／分組顯示，
-> 就還要在 `albums.ts` 的 activities 分支補上 `tags`，並決定前端要不要顯示。
-> **這是需求決策不是技術問題，先不自作主張。**
+**2026-08-07 追加：讓 portrait／event 也吐相簿標籤（Johnny 當場決定）**
+
+原本公開 API 的 `activities` 形狀**根本沒有 `tags` 欄位**，只有 street 的 `albums` 有
+（`albums.ts` 的 `isAlbums ? {...tags...} : {...}`），所以回填進去的 portrait/event 標籤
+公開站讀不到。Johnny 的目的是**「兩邊的相簿版面要一樣」**，所以補上：
+
+- [x] PageWorker `src/albums.ts`：activities 分支補 `tags: tagsByCollection.get(col.id) ?? []`
+- [x] `frontend/src/views/GalleryView.vue`：建 groups 時多帶 `tags: activity.tags`。
+      `PhotoWall.vue` 本來就會畫 `group.tags`，是共用元件 —— 資料形狀一致之後兩邊自然長得一樣，
+      **不需要改任何 CSS**。
 
 ### T4 — 略過
 Johnny 已確認現有的「相關相簿」區塊（`AlbumDetailView.vue` 公開頁的 `relatedGroups`）

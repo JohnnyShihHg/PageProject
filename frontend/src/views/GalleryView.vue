@@ -44,10 +44,12 @@ onMounted(async () => {
   window.scrollTo(0, 0);
   try {
     albumsData.value = await loadAlbums();
+    // tags 跟 street 的相簿傳一樣的形狀，PhotoWall 才會在兩邊畫出相同的分組標題
     groups.value = albumsData.value.categories[categoryKey.value].activities.map((activity) => ({
       name: activity.activityName,
       date: activity.date,
-      photos: activity.photos
+      photos: activity.photos,
+      tags: activity.tags
     }));
   } catch (err) {
     console.error(err);

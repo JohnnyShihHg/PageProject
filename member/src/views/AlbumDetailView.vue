@@ -130,9 +130,6 @@
                 <div v-if="photoMsg[p.photoId]" :class="['msg', photoMsg[p.photoId].ok ? 'ok' : 'bad']">
                   {{ photoMsg[p.photoId].text }}
                 </div>
-                <div v-if="p.tags.length" class="tags">
-                  <span v-for="t in p.tags" :key="t" class="tag">{{ t }}</span>
-                </div>
                 <button
                   type="button"
                   class="danger-link"
@@ -651,13 +648,6 @@ button.ghost {
 .alt-row input {
   flex: 1;
   min-width: 0;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.4rem;
 }
 
 .danger-link {

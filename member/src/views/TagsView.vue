@@ -17,7 +17,6 @@
         <thead>
           <tr>
             <th>名稱</th>
-            <th class="num">照片</th>
             <th class="num">相簿</th>
             <th></th>
           </tr>
@@ -31,7 +30,7 @@
                 @keyup.enter="rename(t)"
               />
             </td>
-            <td class="num" :class="{ zero: t.photo_count === 0 }">{{ t.photo_count }}</td>
+            <!-- 2026-08-07 起標籤只掛相簿，API 不再回 photo_count，「照片」欄一併拿掉 -->
             <td class="num" :class="{ zero: t.collection_count === 0 }">{{ t.collection_count }}</td>
             <td class="ops">
               <button
