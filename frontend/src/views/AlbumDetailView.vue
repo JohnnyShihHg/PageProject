@@ -3,7 +3,9 @@
     <Navbar />
 
     <div class="content-wrapper">
-      <div class="header-spacer"></div>
+      <header class="page-header">
+        <h1 class="title">{{ categoryDisplayName }}</h1>
+      </header>
 
       <div class="masonry-container">
         <PhotoWall v-if="!isLoading && groups.length" :groups="groups" />
@@ -37,6 +39,11 @@ const RELATED_ALBUMS_LIMIT = 4;
 
 const albumsData = ref(null);
 const streetAlbums = computed(() => albumsData.value?.categories.street.albums ?? []);
+
+// 大標用分類名稱（Street & Travel）而不是相簿名稱：相簿名稱已經由 PhotoWall 的
+// 分組標題顯示了，這裡再寫一次只是重複。取 API 的值而不是寫死字串，
+// 之後在後台改分類名稱時這頁會跟著變。載入完成前先留空，避免閃一下預設字再換掉。
+const categoryDisplayName = computed(() => albumsData.value?.categories.street.displayName ?? '');
 
 const album = computed(() =>
   streetAlbums.value.find((a) => a.albumId === props.albumId)
@@ -102,8 +109,15 @@ onMounted(async () => {
   width: 100%;
 }
 
-.header-spacer {
-  height: 106px;
+/* 與 /album 清單頁（AlbumView）的大標一致，兩頁之間切換時標題不會跳動 */
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
 }
 
 .masonry-container {
