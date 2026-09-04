@@ -156,7 +156,8 @@ D1 列引用，所以 R2 那份必然是沒人指向的殘骸。ingest 失敗時
 
 ```
 GET    /api/admin/collections        列出全部（含公開 API 不吐的欄位）
-PATCH  /api/admin/collections/:id    name / date / occasion / person_name / cover_photo_id
+PATCH  /api/admin/collections/:id    name / occasion / person_name / cover_photo_id / tags
+                                     （date 不可改：是相簿 ID 的一部分，帶 date 會回 400）
 DELETE /api/admin/collections/:id    刪相簿
 PATCH  /api/admin/photos/:id         alt / tags
 POST   /api/admin/photos/reorder     批次 order_index
