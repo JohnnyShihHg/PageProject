@@ -131,6 +131,12 @@ Worker 跑不了 sharp（原生模組），也不為此引入 Cloudflare Images�
 ### D5. 刪除功能排最後，且預設只刪 D1 不刪 R2
 唯一不可逆的功能。誤刪時 R2 還留著檔案就救得回來。
 
+**2026-09-04 補充：** 刪相簿留下的 R2 孤兒不再擋住重傳。網頁上傳（`upload.ts`）碰到
+「R2 有、D1 沒有」的 key 時**直接覆蓋**，不再回 409 —— 安全前提是 `photos.filename`
+全域唯一（migration 0003）＋ 上傳前的 `findFilenameClashes` 已確認該檔名不被任何
+D1 列引用，所以 R2 那份必然是沒人指向的殘骸。ingest 失敗時只回收「這次新建」的
+物件，被覆蓋的孤兒不動。回應多帶 `overwritten` 計數。
+
 ### D6. 公開站的封面「隨機挑」是刻意保留的，不要改
 `frontend/src/views/AlbumView.vue:49` 用 `Math.random()` 從相簿裡挑一張當封面，
 所以每次重新整理封面都會換。**2026-08-05 Johnny 明確表示這樣就好，不用調整。**
@@ -150,7 +156,9 @@ Worker 跑不了 sharp（原生模組），也不為此引入 Cloudflare Images�
 
 ```
 GET    /api/admin/collections        列出全部（含公開 API 不吐的欄位）
-PATCH  /api/admin/collections/:id    name / date / occasion / person_name / cover_photo_id
+GET    /api/admin/collections/:id    單一相簿 + 照片 + 標籤（形狀同列表的每一項）
+PATCH  /api/admin/collections/:id    name / occasion / person_name / cover_photo_id / tags
+                                     （date 不可改：是相簿 ID 的一部分，帶 date 會回 400）
 DELETE /api/admin/collections/:id    刪相簿
 PATCH  /api/admin/photos/:id         alt / tags
 POST   /api/admin/photos/reorder     批次 order_index
@@ -255,12 +263,12 @@ PUT    /api/admin/content            編輯文案
   與 D3 的基準相符）；D1 逐欄與 CLI 寫入的資料比對一致（欄位、型別、URL 編碼規則、`thumb_` 前綴）。
 
 > **寫入順序是刻意的，不要調換**（`upload.ts`）：
-> `查撞名 → 查 R2 是否已有同名物件 → 寫 R2 → 寫 D1`，且 **ingest 失敗要把剛寫的 R2 物件刪掉**。
-> 反過來（先寫 R2 再驗）的話，撞名時 R2 上既有的圖檔已經被覆蓋，回幾號錯誤都救不回來 ——
+> `查撞名（D1）→ 記下 R2 上已存在的 key → 寫 R2 → 寫 D1`，且 **ingest 失敗要把這次新建的 R2 物件刪掉**。
+> D1 撞名檢查一定要在動 R2 之前跑完：撞到 D1 既有檔名（= 真的重複上傳）要在覆蓋前擋下來，
 > 那正是 §6 陷阱一。回收路徑正常流程碰不到，是用故障注入實測過的。
 >
-> 另外多擋一種狀況：**R2 有、D1 沒有**（前一次失敗的殘留）。這時候能不能覆蓋沒人知道，
-> 所以不猜，直接回 409 要人去看。
+> **R2 有、D1 沒有**（刪相簿留下的孤兒）：**直接覆蓋**，見 D5 的 2026-09-04 補充。
+> 被覆蓋的孤兒不列入 ingest 失敗的回收清單。
 
 > **R2 binding 是新的權限面。** `wrangler.jsonc` 多了 `r2_buckets`（`my-page-photo`）與
 > `R2_PUBLIC_URL_BASE`。那個 URL **必須與 `SharpProject/.env` 的 `R2_PUBLIC_URL_BASE` 一字不差**，
@@ -432,6 +440,15 @@ dev 預覽站就是因為漏加，相簿一直顯示「照片準備中」。
 要看到真正的 `error code: 1042` 得去讀回應主體。當時第一個假設（原封不動轉發
 所有標頭導致邊緣誤判）是**錯的**，改精簡標頭沒有解決問題 —— 那個改動本身仍保留，
 因為不該把 Access session 往上游送，但它不是這個 bug 的原因。
+
+**陷阱七：`GET /api/admin/collections` 每次都掃過全站每一張照片列（D1 rows read 按掃過的列計費）。**
+2026-09-04 實測：一個人上傳一輪 session（上傳 → 回列表 → 點進相簿 → 改 alt → 再回列表）就打出 2000+ rows read，
+因為列表端點回傳完整 photos 陣列且 `Cache-Control: no-store`，被 AlbumsView / AlbumDetailView / UploadView 反覆呼叫。
+已做的緩解：
+- `AlbumDetailView` 改用 `GET /api/admin/collections/:id`（只讀該相簿的照片，不掃全站）。
+- `api/admin.js` 的 `listCollections()` 加 module 層級 promise 快取，任何寫入（`request()` 非 GET，或 `uploadPhotos`）自動清掉。
+- `ingestPhotos` 產 photoId 從 `MAX(CAST(SUBSTR(photo_id,3) AS INTEGER))`（全表掃描）改成 `ORDER BY photo_id DESC LIMIT 1`（讀 1 列）。⚠️ 這招靠 `p_` + 4 位零填充的固定寬度，超過 `p_9999` 會失準，`ingest.ts` 有 guard 擋下。
+- `GET /api/admin/collections` 不再 SELECT 每一張照片列：`photo_count` / `empty_alt_count` 反正規化到 `collections`（migration 0009），封面縮圖用兩句子查詢取。列表端點的每一項現在回 `photoCount` / `emptyAltCount` / `coverThumbUrl`，**不再有 `photos` 陣列**（詳情頁走 `:id` 端點拿完整照片）。計數維護點：`ingestPhotos`、`DELETE /photos/:id`、`POST /photos/bulk-delete` 用 `recountCollectionStmt` 重算；`PATCH /photos/:photoId` 走 delta（alt 空↔非空時 ±1）。都在各自的 `db.batch` 交易裡。
 
 **陷阱五：本機 `wrangler dev` 上傳測試，圖一定是死的，這是預期行為。**
 本機的 R2 binding 是 miniflare 模擬（存在本機快取），但寫進 D1 的 `url` 用的是**正式**

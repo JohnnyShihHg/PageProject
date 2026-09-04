@@ -12,6 +12,9 @@ async function request(path, { method = 'GET', body } = {}) {
     body: body === undefined ? undefined : JSON.stringify(body),
   })
 
+  // 任何寫入都可能改動相簿清單 —— 清掉快取，未來新增的寫入端點自動涵蓋。
+  if (method !== 'GET') invalidateCollectionsCache()
+
   let data = null
   const text = await res.text()
   if (text) {
@@ -42,7 +45,29 @@ export class ApiError extends Error {
   }
 }
 
-export const listCollections = () => request('/api/admin/collections')
+// GET /api/admin/collections 每次呼叫都會掃過全站每一張照片列（rows read 很貴），
+// 而 AlbumsView / UploadView 在同一次瀏覽裡會各打一次、上傳後又補一次。用 module
+// 層級的 promise 快取讓它們共用同一次請求；任何寫入（request() 裡非 GET 的呼叫，
+// 或 uploadPhotos）都會清掉快取，下一次讀就是新的。
+let collectionsCache = null
+
+export function invalidateCollectionsCache() {
+  collectionsCache = null
+}
+
+export function listCollections() {
+  if (!collectionsCache) {
+    collectionsCache = request('/api/admin/collections').catch((e) => {
+      collectionsCache = null // 失敗不留快取，下次進頁面能重試
+      throw e
+    })
+  }
+  return collectionsCache
+}
+
+/** 單一相簿 + 它的照片與標籤。不掃全站，只讀這一本。 */
+export const getCollection = (id) =>
+  request(`/api/admin/collections/${encodeURIComponent(id)}`).then((d) => d.collection)
 
 export const updateCollection = (id, patch) =>
   request(`/api/admin/collections/${encodeURIComponent(id)}`, { method: 'PATCH', body: patch })
@@ -96,6 +121,8 @@ export async function uploadPhotos(meta, files) {
 
   // 不要自己設 Content-Type：boundary 必須由瀏覽器產生
   const res = await fetch('/api/admin/upload', { method: 'POST', body: form })
+  invalidateCollectionsCache() // 這支不走 request()，要自己清
+
   const text = await res.text()
   let data = null
   if (text) {

@@ -44,7 +44,7 @@
           </div>
 
           <RouterLink :to="`/albums/${encodeURIComponent(col.id)}`" class="thumb">
-            <img v-if="cover(col)" :src="cover(col)" :alt="col.name" loading="lazy" />
+            <img v-if="col.coverThumbUrl" :src="col.coverThumbUrl" :alt="col.name" loading="lazy" />
             <span v-else class="thumb-empty">無照片</span>
           </RouterLink>
 
@@ -57,13 +57,13 @@
             <dl class="meta">
               <div><dt>ID</dt><dd><code>{{ col.id }}</code></dd></div>
               <div><dt>日期</dt><dd>{{ col.date }}</dd></div>
-              <div><dt>照片</dt><dd>{{ col.photos.length }} 張</dd></div>
+              <div><dt>照片</dt><dd>{{ col.photoCount }} 張</dd></div>
               <div v-if="col.personName"><dt>人物</dt><dd>{{ col.personName }}</dd></div>
               <div v-if="col.occasion"><dt>說明</dt><dd>{{ col.occasion }}</dd></div>
               <div>
                 <dt>alt</dt>
-                <dd :class="{ warn: emptyAltCount(col) > 0 }">
-                  {{ emptyAltCount(col) === 0 ? '全部已填' : `${emptyAltCount(col)} 張未填` }}
+                <dd :class="{ warn: col.emptyAltCount > 0 }">
+                  {{ col.emptyAltCount === 0 ? '全部已填' : `${col.emptyAltCount} 張未填` }}
                 </dd>
               </div>
             </dl>
@@ -96,7 +96,7 @@
         </p>
         <ul>
           <li v-for="col in selectedCollections" :key="col.id">
-            {{ col.name }}（{{ col.photos.length }} 張）
+            {{ col.name }}（{{ col.photoCount }} 張）
           </li>
         </ul>
       </ConfirmDialog>
@@ -115,7 +115,7 @@ const collections = ref([])
 const loading = ref(true)
 const error = ref(null)
 
-const totalPhotos = computed(() => collections.value.reduce((n, c) => n + c.photos.length, 0))
+const totalPhotos = computed(() => collections.value.reduce((n, c) => n + c.photoCount, 0))
 
 // --- T7：多選批次刪除 -----------------------------------------------------
 // 走 bulkDeleteCollections 這支交易式端點，不是迴圈呼叫單筆 deleteCollection
@@ -129,7 +129,7 @@ const selectedCollections = computed(() =>
   collections.value.filter((c) => selectedIds.value.includes(c.id))
 )
 const selectedPhotoCount = computed(() =>
-  selectedCollections.value.reduce((n, c) => n + c.photos.length, 0)
+  selectedCollections.value.reduce((n, c) => n + c.photoCount, 0)
 )
 const someSelected = computed(() => selectedIds.value.length > 0)
 const allSelected = computed(
@@ -160,14 +160,8 @@ async function doBulkDelete() {
 const CATEGORY_LABELS = { portrait: '人像', event: '活動', street: '街拍' }
 const categoryLabel = (key) => CATEGORY_LABELS[key] ?? key
 
-/** 有設封面就用封面，否則用第一張 —— 與 Phase 2 要修的公開站行為保持一致（不隨機） */
-function cover(col) {
-  if (!col.photos.length) return null
-  const picked = col.coverPhotoId && col.photos.find((p) => p.photoId === col.coverPhotoId)
-  return (picked ?? col.photos[0]).thumbUrl
-}
-
-const emptyAltCount = (col) => col.photos.filter((p) => !p.alt.trim()).length
+// 封面縮圖（col.coverThumbUrl）與未填 alt 數（col.emptyAltCount）由 GET /api/admin/collections
+// 直接吐出來 —— 前端不再收完整的 photos 陣列，那會讓後端掃過全站每一張照片列。
 
 async function load() {
   loading.value = true

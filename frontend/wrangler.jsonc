@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "pageproject",
+  // 寫死帳號，不要拿掉 —— 理由見 PageWorker/wrangler.jsonc 的同一行註解：
+  // 登入到錯帳號時 `wrangler deploy` 不會報錯，會安靜地部署到別人的帳號底下。
+  // 這個帳號也是 zhendoku.com 這個 zone 所在的帳號（下面的 routes 需要）。
+  "account_id": "0d9e171bf5c5516678787a8b7f53b940",
   "compatibility_date": "2026-08-02",
   "main": "./worker/index.js",
   // 自訂網域。不含 www：2026-08-07 是全新網域，還沒有人習慣打 www 進來，

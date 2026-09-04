@@ -18,7 +18,8 @@
             </label>
             <label>
               <span>日期</span>
-              <input v-model="form.date" type="date" required />
+              <input v-model="form.date" type="date" disabled />
+              <small class="dim">日期是相簿 ID 的一部分，建立後不可修改。</small>
             </label>
             <label v-if="col.category === 'street'">
               <span>說明 occasion</span>
@@ -269,7 +270,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import AsyncState from '../components/AsyncState.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import {
-  listCollections,
+  getCollection,
   listTags,
   updateCollection,
   updatePhoto,
@@ -405,13 +406,9 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    // 目前只有「取全部」這個端點。相簿數量還很少（個位數），為了單一相簿再開一支
-    // API 不划算；等數量成長到讓這件事變慢時再加 GET /collections/:id。
-    const data = await listCollections()
-    const found = data.collections.find((c) => c.id === props.collectionId)
-    if (!found) {
-      throw Object.assign(new Error(`找不到相簿 ${props.collectionId}`), { status: 404 })
-    }
+    // 只讀這一本相簿，不再抓 listCollections() 掃過全站每一張照片列
+    // （見 api/admin.js 的 getCollection）。找不到時後端回 404。
+    const found = await getCollection(props.collectionId)
     col.value = found
     form.name = found.name
     form.date = found.date
@@ -436,7 +433,8 @@ async function saveCollection() {
   savingCollection.value = true
   collectionMsg.value = null
   try {
-    const patch = { name: form.name, date: form.date, tags: parseTags(form.tags) }
+    // date 不送：相簿日期建立後不可改（是 ID 的一部分），後端也會擋下帶 date 的請求。
+    const patch = { name: form.name, tags: parseTags(form.tags) }
     // 空字串代表清空，要送 null 而不是 ""
     if (col.value.category === 'street') patch.occasion = form.occasion.trim() || null
     if (col.value.category === 'portrait') patch.personName = form.personName.trim() || null
@@ -444,7 +442,6 @@ async function saveCollection() {
     await updateCollection(col.value.id, patch)
     Object.assign(col.value, {
       name: patch.name,
-      date: patch.date,
       tags: patch.tags,
       occasion: patch.occasion ?? col.value.occasion,
       personName: patch.personName ?? col.value.personName,
