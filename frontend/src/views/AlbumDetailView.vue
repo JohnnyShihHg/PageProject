@@ -27,6 +27,7 @@ import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
 import PhotoWall from '../components/PhotoWall.vue';
 import { loadAlbums } from '../api/albums';
+import { track } from '../api/track';
 
 const props = defineProps({
   albumId: {
@@ -63,7 +64,9 @@ const relatedGroups = computed(() =>
     name: a.albumName,
     date: a.date,
     photos: a.photos,
-    tags: a.tags
+    tags: a.tags,
+    collectionId: a.albumId,
+    category: 'street'
   }))
 );
 
@@ -79,9 +82,12 @@ onMounted(async () => {
           name: album.value.albumName,
           date: album.value.date,
           photos: album.value.photos,
-          tags: album.value.tags
+          tags: album.value.tags,
+          collectionId: album.value.albumId,
+          category: 'street'
         }
       ];
+      track('album_view', { collectionId: album.value.albumId, category: 'street' });
     }
   } catch (err) {
     console.error(err);
