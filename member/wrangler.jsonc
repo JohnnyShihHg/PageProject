@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "member",
+  // 寫死帳號，不要拿掉 —— 理由見 PageWorker/wrangler.jsonc 的同一行註解：
+  // 登入到錯帳號時 `wrangler deploy` 不會報錯，會安靜地部署到別人的帳號底下。
+  // 必須與 pageworker 同一個帳號，否則下面的 Service Binding 綁不到。
+  "account_id": "0d9e171bf5c5516678787a8b7f53b940",
   "compatibility_date": "2026-08-02",
   "main": "./worker/index.js",
   // Cloudflare Access 的設定值（見 worker/access.js）。兩個都不是機密 ——
