@@ -143,6 +143,9 @@ export const getContent = () => request('/api/admin/content').then((d) => d.cont
 export const updateContent = (patch) =>
   request('/api/admin/content', { method: 'PUT', body: patch }).then((d) => d.content)
 
+/** 點閱排行（總覽頁用）。{ topAlbums, topPhotos, generatedAt } */
+export const getAnalyticsTop = () => request('/api/admin/analytics/top')
+
 export const listTags = () => request('/api/admin/tags')
 
 export const createTag = (name) => request('/api/admin/tags', { method: 'POST', body: { name } })

@@ -18,7 +18,7 @@
           <div
             class="photo-item"
             :style="{ aspectRatio: `${item.width} / ${item.height}` }"
-            @click="selectedPhoto = item"
+            @click="openPhoto(item, group)"
           >
             <img :src="item.thumbUrl" :alt="item.alt" loading="lazy" />
           </div>
@@ -35,10 +35,12 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { track } from '../api/track';
 
 defineProps({
   groups: {
-    // Array<{ name: string, date: string, photos: Array }>
+    // Array<{ name, date, photos, tags, collectionId?, category? }>
+    // collectionId / category 只用於點閱統計，沒帶就不記
     type: Array,
     required: true
   },
@@ -57,6 +59,18 @@ defineProps({
 });
 
 const selectedPhoto = ref(null);
+
+function openPhoto(photo, group) {
+  selectedPhoto.value = photo;
+  if (group?.collectionId) {
+    track('photo_open', {
+      collectionId: group.collectionId,
+      category: group.category,
+      photoId: photo.photoId,
+      filename: photo.filename,
+    });
+  }
+}
 
 function handleKeydown(e) {
   if (e.key === 'Escape') selectedPhoto.value = null;

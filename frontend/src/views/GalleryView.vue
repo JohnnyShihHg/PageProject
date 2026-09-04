@@ -48,7 +48,11 @@ onMounted(async () => {
       name: activity.activityName,
       date: activity.date,
       photos: activity.photos,
-      tags: activity.tags
+      tags: activity.tags,
+      // 點閱統計用。portrait/event 沒有獨立頁，所以不記 album_view，
+      // 相簿層級的熱門度由 photo_open 累計出來。
+      collectionId: activity.activityId,
+      category: categoryKey.value
     }));
   } catch (err) {
     console.error(err);
