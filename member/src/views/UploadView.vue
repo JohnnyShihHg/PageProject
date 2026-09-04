@@ -168,6 +168,9 @@
         寫入相簿 <code>{{ result.collectionId }}</code>（{{ result.created ? '新建' : '附加到既有相簿' }}），
         共 {{ result.photos.length }} 張、R2 物件 {{ result.uploaded }} 個。
       </p>
+      <p v-if="result.overwritten" class="dim">
+        其中 {{ result.overwritten }} 個 R2 物件覆蓋了先前刪除相簿留下的殘留檔案。
+      </p>
       <ul class="assigned">
         <li v-for="p in result.photos" :key="p.photoId">
           <code>{{ p.photoId }}</code> · 順序 {{ p.orderIndex }} · {{ p.filename }}
