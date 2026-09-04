@@ -270,7 +270,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import AsyncState from '../components/AsyncState.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import {
-  listCollections,
+  getCollection,
   listTags,
   updateCollection,
   updatePhoto,
@@ -406,13 +406,9 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    // 目前只有「取全部」這個端點。相簿數量還很少（個位數），為了單一相簿再開一支
-    // API 不划算；等數量成長到讓這件事變慢時再加 GET /collections/:id。
-    const data = await listCollections()
-    const found = data.collections.find((c) => c.id === props.collectionId)
-    if (!found) {
-      throw Object.assign(new Error(`找不到相簿 ${props.collectionId}`), { status: 404 })
-    }
+    // 只讀這一本相簿，不再抓 listCollections() 掃過全站每一張照片列
+    // （見 api/admin.js 的 getCollection）。找不到時後端回 404。
+    const found = await getCollection(props.collectionId)
     col.value = found
     form.name = found.name
     form.date = found.date

@@ -156,6 +156,7 @@ D1 列引用，所以 R2 那份必然是沒人指向的殘骸。ingest 失敗時
 
 ```
 GET    /api/admin/collections        列出全部（含公開 API 不吐的欄位）
+GET    /api/admin/collections/:id    單一相簿 + 照片 + 標籤（形狀同列表的每一項）
 PATCH  /api/admin/collections/:id    name / occasion / person_name / cover_photo_id / tags
                                      （date 不可改：是相簿 ID 的一部分，帶 date 會回 400）
 DELETE /api/admin/collections/:id    刪相簿
@@ -439,6 +440,15 @@ dev 預覽站就是因為漏加，相簿一直顯示「照片準備中」。
 要看到真正的 `error code: 1042` 得去讀回應主體。當時第一個假設（原封不動轉發
 所有標頭導致邊緣誤判）是**錯的**，改精簡標頭沒有解決問題 —— 那個改動本身仍保留，
 因為不該把 Access session 往上游送，但它不是這個 bug 的原因。
+
+**陷阱七：`GET /api/admin/collections` 每次都掃過全站每一張照片列（D1 rows read 按掃過的列計費）。**
+2026-09-04 實測：一個人上傳一輪 session（上傳 → 回列表 → 點進相簿 → 改 alt → 再回列表）就打出 2000+ rows read，
+因為列表端點回傳完整 photos 陣列且 `Cache-Control: no-store`，被 AlbumsView / AlbumDetailView / UploadView 反覆呼叫。
+已做的緩解：
+- `AlbumDetailView` 改用 `GET /api/admin/collections/:id`（只讀該相簿的照片，不掃全站）。
+- `api/admin.js` 的 `listCollections()` 加 module 層級 promise 快取，任何寫入（`request()` 非 GET，或 `uploadPhotos`）自動清掉。
+- `ingestPhotos` 產 photoId 從 `MAX(CAST(SUBSTR(photo_id,3) AS INTEGER))`（全表掃描）改成 `ORDER BY photo_id DESC LIMIT 1`（讀 1 列）。⚠️ 這招靠 `p_` + 4 位零填充的固定寬度，超過 `p_9999` 會失準，`ingest.ts` 有 guard 擋下。
+- 還沒做：列表端點仍回完整 photos 陣列（AlbumsView 用得到 `photoCount` / 封面縮圖 / 未填 alt 數）。要再降就得把 `photo_count` 之類的聚合值反正規化到 `collections` 上，那是一次 migration。
 
 **陷阱五：本機 `wrangler dev` 上傳測試，圖一定是死的，這是預期行為。**
 本機的 R2 binding 是 miniflare 模擬（存在本機快取），但寫進 D1 的 `url` 用的是**正式**
