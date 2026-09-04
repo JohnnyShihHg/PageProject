@@ -448,7 +448,7 @@ dev 預覽站就是因為漏加，相簿一直顯示「照片準備中」。
 - `AlbumDetailView` 改用 `GET /api/admin/collections/:id`（只讀該相簿的照片，不掃全站）。
 - `api/admin.js` 的 `listCollections()` 加 module 層級 promise 快取，任何寫入（`request()` 非 GET，或 `uploadPhotos`）自動清掉。
 - `ingestPhotos` 產 photoId 從 `MAX(CAST(SUBSTR(photo_id,3) AS INTEGER))`（全表掃描）改成 `ORDER BY photo_id DESC LIMIT 1`（讀 1 列）。⚠️ 這招靠 `p_` + 4 位零填充的固定寬度，超過 `p_9999` 會失準，`ingest.ts` 有 guard 擋下。
-- 還沒做：列表端點仍回完整 photos 陣列（AlbumsView 用得到 `photoCount` / 封面縮圖 / 未填 alt 數）。要再降就得把 `photo_count` 之類的聚合值反正規化到 `collections` 上，那是一次 migration。
+- `GET /api/admin/collections` 不再 SELECT 每一張照片列：`photo_count` / `empty_alt_count` 反正規化到 `collections`（migration 0009），封面縮圖用兩句子查詢取。列表端點的每一項現在回 `photoCount` / `emptyAltCount` / `coverThumbUrl`，**不再有 `photos` 陣列**（詳情頁走 `:id` 端點拿完整照片）。計數維護點：`ingestPhotos`、`DELETE /photos/:id`、`POST /photos/bulk-delete` 用 `recountCollectionStmt` 重算；`PATCH /photos/:photoId` 走 delta（alt 空↔非空時 ±1）。都在各自的 `db.batch` 交易裡。
 
 **陷阱五：本機 `wrangler dev` 上傳測試，圖一定是死的，這是預期行為。**
 本機的 R2 binding 是 miniflare 模擬（存在本機快取），但寫進 D1 的 `url` 用的是**正式**

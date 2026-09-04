@@ -72,7 +72,7 @@
             <option value="">請選擇…</option>
             <optgroup v-for="g in groupedCollections" :key="g.key" :label="g.label">
               <option v-for="c in g.items" :key="c.id" :value="c.id">
-                {{ c.name }}（{{ c.date }}・{{ c.photos.length }} 張）
+                {{ c.name }}（{{ c.date }}・{{ c.photoCount }} 張）
               </option>
             </optgroup>
           </select>
@@ -136,7 +136,7 @@
           <template v-if="previewCollectionId">
             將寫入的相簿 id：<code>{{ previewCollectionId }}</code>
             <span v-if="matchedExisting" class="append">
-              → 會<strong>附加</strong>到現有的「{{ matchedExisting.name }}」（目前 {{ matchedExisting.photos.length }} 張）
+              → 會<strong>附加</strong>到現有的「{{ matchedExisting.name }}」（目前 {{ matchedExisting.photoCount }} 張）
             </span>
             <span v-else class="fresh">→ 會<strong>新建</strong>一本相簿</span>
           </template>
